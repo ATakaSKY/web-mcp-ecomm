@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebMCP Shop — Interactive Architecture</title>
+<style>
+:root {
+  --bg: #0a0b0f; --surface: #13151c; --s2: #1c1f2b; --border: #262a3a;
+  --text: #e4e6ef; --muted: #6e7290; --accent: #6c8aff; --accent-h: #8da4ff;
+  --green: #4caf84; --orange: #f0a050; --red: #ef5350; --purple: #b388ff;
+  --cyan: #4dd0e1; --mono: "JetBrains Mono","Fira Code",monospace;
+  --font: "Inter",-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ─── Top bar ─── */
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.25rem;gap:1rem;flex-shrink:0}
+.topbar h1{font-size:1rem;font-weight:700;background:linear-gradient(90deg,#6c8aff,#b388ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar .hint{font-size:.78rem;color:var(--muted)}
+.view-toggle{display:flex;gap:2px;margin-left:auto}
+.view-toggle button{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:.75rem;padding:.3rem .7rem;cursor:pointer;border-radius:6px;font-weight:600;transition:all .15s}
+.view-toggle button.active,.view-toggle button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ─── Layout ─── */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ─── Sidebar file tree ─── */
+.sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:.75rem 0}
+.sidebar-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:0 1rem .5rem;margin-bottom:.25rem}
+.tree-item{display:flex;align-items:center;gap:.45rem;padding:.3rem 1rem;font-size:.82rem;cursor:pointer;transition:background .1s;border-left:2px solid transparent}
+.tree-item:hover{background:var(--s2)}
+.tree-item.active{background:rgba(108,138,255,.1);border-left-color:var(--accent);color:var(--accent)}
+.tree-item .icon{font-size:.7rem;width:16px;text-align:center;flex-shrink:0}
+.tree-folder{padding:.4rem 1rem .2rem;font-size:.75rem;font-weight:700;color:var(--muted);margin-top:.5rem;user-select:none;cursor:pointer;display:flex;align-items:center;gap:.35rem}
+.tree-folder .chevron{transition:transform .15s;font-size:.6rem}
+.tree-folder.collapsed .chevron{transform:rotate(-90deg)}
+.tree-folder.collapsed ~ .tree-item[data-folder]{display:none}
+.tag{font-size:.6rem;padding:.1rem .35rem;border-radius:99px;margin-left:auto;font-weight:700;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+.tag-imp{background:rgba(108,138,255,.15);color:var(--accent)}
+.tag-dec{background:rgba(76,175,132,.15);color:var(--green)}
+.tag-store{background:rgba(240,160,80,.15);color:var(--orange)}
+.tag-type{background:rgba(179,136,255,.15);color:var(--purple)}
+.tag-modal{background:rgba(179,136,255,.2);color:var(--purple)}
+
+/* ─── Canvas area ─── */
+.canvas{flex:1;position:relative;overflow:hidden}
+.canvas svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* ─── Detail panel ─── */
+.detail{width:380px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;transition:width .2s}
+.detail.collapsed{width:0;padding:0;overflow:hidden}
+.detail-header{display:flex;align-items:start;justify-content:space-between}
+.detail-header h2{font-size:1.05rem;font-weight:700}
+.detail-close{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.2rem}
+.detail-path{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
+.detail-purpose{font-size:.88rem;line-height:1.55;color:var(--text);padding:.6rem .8rem;background:var(--bg);border:1px solid var(--border);border-radius:8px}
+.detail-section{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.25rem}
+.detail-list{display:flex;flex-direction:column;gap:.3rem}
+.detail-chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.8rem;padding:.25rem .55rem;background:var(--s2);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .15s;color:var(--text)}
+.detail-chip:hover{border-color:var(--accent);color:var(--accent)}
+.detail-chip .chip-icon{font-size:.7rem;color:var(--muted)}
+.detail-exports{display:flex;flex-wrap:wrap;gap:.35rem}
+.export-chip{font-size:.78rem;font-family:var(--mono);padding:.2rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--cyan)}
+.detail-tools{display:flex;flex-direction:column;gap:.3rem}
+.tool-chip{font-size:.82rem;font-family:var(--mono);padding:.35rem .65rem;background:var(--bg);border-radius:6px;display:flex;align-items:center;justify-content:space-between}
+.tool-chip .tool-name{font-weight:600}
+.tool-chip.imp{border-left:3px solid var(--accent);color:var(--accent)}
+.tool-chip.dec{border-left:3px solid var(--green);color:var(--green)}
+.tool-chip .tool-api{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.detail-meta{font-size:.8rem;color:var(--muted);display:flex;gap:1rem}
+.detail-meta span{display:flex;align-items:center;gap:.3rem}
+
+/* ─── Graph nodes ─── */
+.node{cursor:pointer;transition:transform .15s}
+.node:hover{transform:scale(1.04)}
+.node.selected rect,.node.selected circle{stroke-width:2.5}
+.dep-line{transition:opacity .15s}
+.dep-line.dim{opacity:.08}
+.dep-line.highlight{opacity:1}
+
+/* ─── Data flow view ─── */
+.flow-view{display:none;flex:1;overflow:auto;padding:2rem}
+.flow-view.visible{display:block}
+.flow-container{max-width:900px;margin:0 auto}
+.flow-step{display:flex;gap:1rem;margin-bottom:.75rem;align-items:start}
+.flow-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;flex-shrink:0}
+.flow-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem}
+.flow-card h3{font-size:.95rem;font-weight:600;margin-bottom:.25rem}
+.flow-card p{font-size:.82rem;color:var(--muted);line-height:1.5}
+.flow-card code{font-family:var(--mono);font-size:.78rem;color:var(--cyan);background:var(--bg);padding:.1rem .35rem;border-radius:3px}
+.flow-arrow{text-align:center;color:var(--muted);font-size:1.1rem;margin:.15rem 0 .15rem 10px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>⚡ WebMCP Shop Architecture</h1>
+  <span class="hint">Click any file or node to explore</span>
+  <div class="view-toggle">
+    <button class="active" onclick="showView('graph')">Graph View</button>
+    <button onclick="showView('flow')">Data Flow</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ─── SIDEBAR ─── -->
+  <div class="sidebar">
+    <div class="sidebar-title">Project Files</div>
+    <div class="tree-item" data-id="main" onclick="select('main')">
+      <span class="icon">📄</span> main.tsx
+    </div>
+    <div class="tree-item" data-id="app" onclick="select('app')">
+      <span class="icon">📄</span> App.tsx
+    </div>
+
+    <div class="tree-folder" onclick="toggleFolder(this)">
+      <span class="chevron">▼</span> store/
+    </div>
+    <div class="tree-item" data-id="store" data-folder onclick="select('store')">
+      <span class="icon">📄</span> StoreContext.tsx <span class="tag tag-store">state</span>
+    </div>
+
+    <div class="tree-folder" onclick="toggleFolder(this)">
+      <span class="chevron">▼</span> hooks/
+    </div>
+    <div class="tree-item" data-id="webmcp" data-folder onclick="select('webmcp')">
+      <span class="icon">📄</span> useWebMCP.ts <span class="tag tag-imp">imperative</span>
+    </div>
+
+    <div class="tree-folder" onclick="toggleFolder(this)">
+      <span class="chevron">▼</span> data/
+    </div>
+    <div class="tree-item" data-id="products" data-folder onclick="select('products')">
+      <span class="icon">📄</span> products.ts
+    </div>
+
+    <div class="tree-folder" onclick="toggleFolder(this)">
+      <span class="chevron">▼</span> types/
+    </div>
+    <div class="tree-item" data-id="types" data-folder onclick="select('types')">
+      <span class="icon">📄</span> index.ts <span class="tag tag-type">types</span>
+    </div>
+    <div class="tree-item" data-id="webmcpd" data-folder onclick="select('webmcpd')">
+      <span class="icon">📄</span> webmcp.d.ts <span class="tag tag-type">types</span>
+    </div>
+
+    <div class="tree-folder" onclick="toggleFolder(this)">
+      <span class="chevron">▼</span> components/
+    </div>
+    <div class="tree-item" data-id="header" data-folder onclick="select('header')">
+      <span class="icon">📄</span> Header.tsx
+    </div>
+    <div class="tree-item" data-id="grid" data-folder onclick="select('grid')">
+      <span class="icon">📄</span> ProductGrid.tsx
+    </div>
+    <div class="tree-item" data-id="card" data-folder onclick="select('card')">
+      <span class="icon">📄</span> ProductCard.tsx
+    </div>
+    <div class="tree-item" data-id="cart" data-folder onclick="select('cart')">
+      <span class="icon">📄</span> CartView.tsx
+    </div>
+    <div class="tree-item" data-id="wishlist" data-folder onclick="select('wishlist')">
+      <span class="icon">📄</span> WishlistView.tsx
+    </div>
+    <div class="tree-item" data-id="checkout" data-folder onclick="select('checkout')">
+      <span class="icon">📄</span> CheckoutView.tsx
+    </div>
+    <div class="tree-item" data-id="declarative" data-folder onclick="select('declarative')">
+      <span class="icon">📄</span> DeclarativeView.tsx <span class="tag tag-dec">declarative</span>
+    </div>
+    <div class="tree-item" data-id="quickbuy" data-folder onclick="select('quickbuy')">
+      <span class="icon">📄</span> QuickBuyModal.tsx <span class="tag tag-modal">modal</span>
+    </div>
+  </div>
+
+  <!-- ─── GRAPH VIEW ─── -->
+  <div class="canvas" id="graphView">
+    <svg id="graphSvg" viewBox="0 0 800 620"></svg>
+  </div>
+
+  <!-- ─── FLOW VIEW ─── -->
+  <div class="flow-view" id="flowView">
+    <div class="flow-container">
+      <h2 style="margin-bottom:1.5rem;font-size:1.2rem">Data Flow: Agent → Tool → UI</h2>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(179,136,255,.15);color:#b388ff">1</div>
+        <div class="flow-card">
+          <h3>Agent discovers tools</h3>
+          <p>Chrome exposes all registered tools via <code>navigator.modelContext</code>. The agent sees tool names, descriptions, and JSON input schemas.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(108,138,255,.15);color:#6c8aff">2</div>
+        <div class="flow-card">
+          <h3>useWebMCP.ts registers 7 imperative tools</h3>
+          <p>On mount, <code>registerTool()</code> is called for each tool. <code>useRef</code> keeps cart/wishlist state fresh inside closures without re-registering.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(76,175,132,.15);color:#4caf84">3</div>
+        <div class="flow-card">
+          <h3>Declarative forms auto-register</h3>
+          <p>Forms with <code>toolname</code> attribute in DeclarativeView.tsx are always registered. QuickBuyModal's form registers <strong>only when the modal is open</strong>.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(179,136,255,.15);color:#b388ff">4</div>
+        <div class="flow-card">
+          <h3>Agent calls a tool</h3>
+          <p>For imperative tools, the <code>execute()</code> callback runs directly. For declarative tools, Chrome auto-fills form fields and fires <code>toolactivated</code>.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(240,160,80,.15);color:#f0a050">5</div>
+        <div class="flow-card">
+          <h3>StoreContext dispatches state change</h3>
+          <p>Tool execute functions call <code>dispatch()</code> which updates cart, wishlist, or UI state via the reducer. React re-renders the affected views.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(77,208,225,.15);color:#4dd0e1">6</div>
+        <div class="flow-card">
+          <h3>UI updates &amp; result returns</h3>
+          <p>Components re-render with new state. The tool returns structured content <code>{ content: [{ type: "text", text }] }</code> (imperative) or <code>respondWith(Promise)</code> (declarative) back to the agent.</p>
+        </div>
+      </div>
+
+      <h2 style="margin:2.5rem 0 1.5rem;font-size:1.2rem">Special Flow: Two-Tool Pattern (Modal)</h2>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(108,138,255,.15);color:#6c8aff">A</div>
+        <div class="flow-card">
+          <h3>Agent calls <code>open_quick_buy</code> (imperative)</h3>
+          <p>Dispatches <code>OPEN_QUICK_BUY</code> with a product ID. The reducer sets <code>quickBuyProductId</code>, which conditionally mounts the QuickBuyModal component.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(76,175,132,.15);color:#4caf84">B</div>
+        <div class="flow-card">
+          <h3><code>complete_quick_buy</code> auto-registers (declarative)</h3>
+          <p>The modal's <code>&lt;form toolname="complete_quick_buy"&gt;</code> enters the DOM. Chrome detects it and auto-registers the tool. The agent can now see and call it.</p>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num" style="background:rgba(240,160,80,.15);color:#f0a050">C</div>
+        <div class="flow-card">
+          <h3>Agent fills form → user confirms → <code>respondWith(Promise)</code></h3>
+          <p>No <code>toolautosubmit</code>, so the user must click "Confirm Purchase". On submit, <code>e.agentInvoked</code> detects the source and <code>respondWith(Promise.resolve(...))</code> returns order data. The UI transition is <strong>delayed</strong> to avoid unmounting the form during processing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── DETAIL PANEL ─── -->
+  <div class="detail collapsed" id="detailPanel"></div>
+</div>
+
+<script>
+const FILES = {
+  main: { name:"main.tsx", path:"src/main.tsx", lines:11, purpose:"Mounts the root React tree with StrictMode into the DOM.",
+    imports:["react","react-dom/client","App.tsx"], exports:[], tools:[], category:"entry",
+    importsIds:["app"] },
+  app: { name:"App.tsx", path:"src/App.tsx", lines:47, purpose:"Wraps the shop in StoreProvider, wires useWebMCP hook, routes views, and conditionally renders QuickBuyModal.",
+    imports:["StoreContext","useWebMCP","Header","ProductGrid","CartView","WishlistView","CheckoutView","DeclarativeView","QuickBuyModal"],
+    exports:["App"], tools:[], category:"entry",
+    importsIds:["store","webmcp","header","grid","cart","wishlist","checkout","declarative","quickbuy"] },
+  store: { name:"StoreContext.tsx", path:"src/store/StoreContext.tsx", lines:123, purpose:"Provides cart, wishlist, view navigation, order, and quick-buy state via React Context + useReducer.",
+    imports:["react","types","products"], exports:["StoreProvider","useStore"], tools:[], category:"state",
+    importsIds:["types","products"] },
+  webmcp: { name:"useWebMCP.ts", path:"src/hooks/useWebMCP.ts", lines:327, purpose:"Registers 7 imperative WebMCP tools on navigator.modelContext and unregisters them on cleanup. Uses useRef for fresh state in closures.",
+    imports:["react","products","types"], exports:["useWebMCP"], category:"webmcp-imp",
+    importsIds:["products","types"],
+    tools:[
+      {name:"add_to_cart",api:"imperative",params:"product_id, quantity?"},
+      {name:"remove_from_cart",api:"imperative",params:"product_id"},
+      {name:"toggle_wishlist",api:"imperative",params:"product_id"},
+      {name:"purchase",api:"imperative",params:"—"},
+      {name:"get_cart",api:"imperative",params:"read-only"},
+      {name:"get_products",api:"imperative",params:"category?"},
+      {name:"open_quick_buy",api:"imperative",params:"product_id"},
+    ] },
+  products: { name:"products.ts", path:"src/data/products.ts", lines:53, purpose:"Static demo product catalog — 6 products with ID, name, price, image, description, category.",
+    imports:["types"], exports:["products"], tools:[], category:"data",
+    importsIds:["types"] },
+  types: { name:"index.ts", path:"src/types/index.ts", lines:16, purpose:"Central TypeScript types: Product, CartItem, View.",
+    imports:[], exports:["Product","CartItem","View"], tools:[], category:"types",
+    importsIds:[] },
+  webmcpd: { name:"webmcp.d.ts", path:"src/types/webmcp.d.ts", lines:48, purpose:"Ambient declarations for navigator.modelContext API and augmented React JSX types for WebMCP HTML attributes (toolname, tooldescription, etc).",
+    imports:[], exports:["ModelContextToolDefinition","ModelContext","Navigator (augmented)","React.FormHTMLAttributes (augmented)"], tools:[], category:"types",
+    importsIds:[] },
+  header: { name:"Header.tsx", path:"src/components/Header.tsx", lines:34, purpose:"Top navigation bar — switches between Products, Wishlist, Cart, and Declarative API views. Shows badge counts.",
+    imports:["StoreContext","types"], exports:["Header"], tools:[], category:"component",
+    importsIds:["store","types"] },
+  grid: { name:"ProductGrid.tsx", path:"src/components/ProductGrid.tsx", lines:16, purpose:"Renders all catalog products in a responsive CSS grid of ProductCard components.",
+    imports:["products","ProductCard"], exports:["ProductGrid"], tools:[], category:"component",
+    importsIds:["products","card"] },
+  card: { name:"ProductCard.tsx", path:"src/components/ProductCard.tsx", lines:45, purpose:"Individual product tile with wishlist toggle, Quick Buy button, and Add to Cart. Dispatches actions to the store.",
+    imports:["types","StoreContext"], exports:["ProductCard"], tools:[], category:"component",
+    importsIds:["types","store"] },
+  cart: { name:"CartView.tsx", path:"src/components/CartView.tsx", lines:81, purpose:"Shopping cart UI — quantity controls, item removal, subtotals, total, and Complete Purchase button.",
+    imports:["StoreContext"], exports:["CartView"], tools:[], category:"component",
+    importsIds:["store"] },
+  wishlist: { name:"WishlistView.tsx", path:"src/components/WishlistView.tsx", lines:33, purpose:"Shows wishlisted products as ProductCards, or an empty state linking back to the shop.",
+    imports:["StoreContext","products","ProductCard"], exports:["WishlistView"], tools:[], category:"component",
+    importsIds:["store","products","card"] },
+  checkout: { name:"CheckoutView.tsx", path:"src/components/CheckoutView.tsx", lines:22, purpose:"Post-purchase success screen. Redirects to shop if no order was placed.",
+    imports:["StoreContext"], exports:["CheckoutView"], tools:[], category:"component",
+    importsIds:["store"] },
+  declarative: { name:"DeclarativeView.tsx", path:"src/components/DeclarativeView.tsx", lines:472, purpose:"Demonstrates declarative WebMCP: 3 annotated HTML forms, event logging (toolactivated/toolcancel), CSS pseudo-class reference, and Imperative vs Declarative comparison.",
+    imports:["react","products"], exports:["DeclarativeView"], category:"webmcp-dec",
+    importsIds:["products"],
+    tools:[
+      {name:"quick_add_to_cart",api:"declarative",params:"product, quantity"},
+      {name:"submit_feedback",api:"declarative",params:"product, rating, comment"},
+      {name:"purchase_gift_card",api:"declarative",params:"email, amount, message?"},
+    ] },
+  quickbuy: { name:"QuickBuyModal.tsx", path:"src/components/QuickBuyModal.tsx", lines:323, purpose:"Modal checkout with a complex declarative form (complete_quick_buy) that auto-registers only when the modal is mounted. Demonstrates the two-tool pattern and respondWith(Promise).",
+    imports:["react","StoreContext","products"], exports:["QuickBuyModal"], category:"webmcp-modal",
+    importsIds:["store","products"],
+    tools:[
+      {name:"complete_quick_buy",api:"declarative",params:"qty, name, address, city, zip, shipping, gift, payment"},
+    ] },
+};
+
+const POSITIONS = {
+  main:       {x:400,y:30},
+  app:        {x:400,y:105},
+  store:      {x:120,y:210},
+  webmcp:     {x:350,y:240},
+  types:      {x:120,y:340},
+  webmcpd:    {x:120,y:420},
+  products:   {x:120,y:500},
+  header:     {x:580,y:160},
+  grid:       {x:700,y:240},
+  card:       {x:700,y:330},
+  cart:       {x:580,y:360},
+  wishlist:   {x:700,y:420},
+  checkout:   {x:580,y:450},
+  declarative:{x:350,y:430},
+  quickbuy:   {x:500,y:530},
+};
+
+const COLORS = {
+  entry:"#6c8aff", state:"#f0a050", "webmcp-imp":"#6c8aff", "webmcp-dec":"#4caf84",
+  "webmcp-modal":"#b388ff", data:"#4dd0e1", types:"#b388ff", component:"#6e7290"
+};
+
+let selectedId = null;
+
+function buildGraph() {
+  const svg = document.getElementById("graphSvg");
+  let html = '';
+  const deps = [];
+  for (const [id, f] of Object.entries(FILES)) {
+    for (const dep of f.importsIds) {
+      if (POSITIONS[dep]) deps.push({from:id,to:dep});
+    }
+  }
+  for (const d of deps) {
+    const f = POSITIONS[d.from], t = POSITIONS[d.to];
+    html += `<line class="dep-line" data-from="${d.from}" data-to="${d.to}" x1="${f.x}" y1="${f.y}" x2="${t.x}" y2="${t.y}" stroke="#262a3a" stroke-width="1"/>`;
+  }
+  for (const [id, f] of Object.entries(FILES)) {
+    const p = POSITIONS[id];
+    const c = COLORS[f.category];
+    const w = Math.max(f.name.length * 7.5 + 24, 100);
+    const h = 30;
+    const hasTools = f.tools && f.tools.length > 0;
+    html += `<g class="node" data-id="${id}" onclick="select('${id}')">`;
+    html += `<rect x="${p.x - w/2}" y="${p.y - h/2}" width="${w}" height="${h}" rx="7" fill="${COLORS[f.category]}11" stroke="${c}" stroke-width="1.2"/>`;
+    if (hasTools) {
+      html += `<circle cx="${p.x + w/2 - 6}" cy="${p.y - h/2 + 6}" r="5" fill="${c}"/>`;
+      html += `<text x="${p.x + w/2 - 6}" y="${p.y - h/2 + 9.5}" text-anchor="middle" fill="#0a0b0f" font-size="7" font-weight="800">${f.tools.length}</text>`;
+    }
+    html += `<text x="${p.x}" y="${p.y + 4.5}" text-anchor="middle" fill="${c}" font-size="11" font-weight="600" font-family="JetBrains Mono, monospace">${f.name}</text>`;
+    html += `</g>`;
+  }
+  svg.innerHTML = html;
+}
+
+function select(id) {
+  selectedId = id;
+  document.querySelectorAll('.tree-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+  document.querySelectorAll('.node').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+
+  const file = FILES[id];
+  const deps = new Set([id, ...file.importsIds]);
+  for (const [fid, f] of Object.entries(FILES)) {
+    if (f.importsIds.includes(id)) deps.add(fid);
+  }
+  document.querySelectorAll('.dep-line').forEach(el => {
+    const from = el.dataset.from, to = el.dataset.to;
+    const relevant = deps.has(from) && deps.has(to);
+    el.classList.toggle('dim', !relevant);
+    el.classList.toggle('highlight', relevant);
+    if (relevant) { el.setAttribute('stroke', COLORS[FILES[from].category]); el.setAttribute('stroke-width','1.8'); }
+    else { el.setAttribute('stroke','#262a3a'); el.setAttribute('stroke-width','1'); }
+  });
+
+  const panel = document.getElementById('detailPanel');
+  panel.classList.remove('collapsed');
+
+  const c = COLORS[file.category];
+  let toolsHtml = '';
+  if (file.tools && file.tools.length) {
+    toolsHtml = `<div class="detail-section">WebMCP Tools (${file.tools.length})</div><div class="detail-tools">`;
+    for (const t of file.tools) {
+      toolsHtml += `<div class="tool-chip ${t.api === 'imperative' ? 'imp' : 'dec'}"><span class="tool-name">${t.name}</span><span class="tool-api">${t.api}</span></div>`;
+    }
+    toolsHtml += '</div>';
+  }
+
+  const importedBy = Object.entries(FILES).filter(([fid, f]) => f.importsIds.includes(id)).map(([fid]) => fid);
+
+  panel.innerHTML = `
+    <div class="detail-header">
+      <h2 style="color:${c}">${file.name}</h2>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-path">${file.path}</div>
+    <div class="detail-purpose">${file.purpose}</div>
+    <div class="detail-meta">
+      <span>📏 ${file.lines} lines</span>
+      <span style="color:${c}">● ${file.category}</span>
+    </div>
+    ${file.exports.length ? `
+      <div class="detail-section">Exports</div>
+      <div class="detail-exports">${file.exports.map(e => `<span class="export-chip">${e}</span>`).join('')}</div>
+    ` : ''}
+    <div class="detail-section">Imports (${file.importsIds.length})</div>
+    <div class="detail-list">
+      ${file.importsIds.length ? file.importsIds.map(d => {
+        const dep = FILES[d];
+        return dep ? `<div class="detail-chip" onclick="select('${d}')"><span class="chip-icon">→</span>${dep.name}</div>` : '';
+      }).join('') : '<span style="color:var(--muted);font-size:.82rem">None</span>'}
+    </div>
+    ${importedBy.length ? `
+      <div class="detail-section">Imported By (${importedBy.length})</div>
+      <div class="detail-list">
+        ${importedBy.map(d => `<div class="detail-chip" onclick="select('${d}')"><span class="chip-icon">←</span>${FILES[d].name}</div>`).join('')}
+      </div>
+    ` : ''}
+    ${toolsHtml}
+  `;
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.add('collapsed');
+  selectedId = null;
+  document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.node').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.dep-line').forEach(el => {
+    el.classList.remove('dim','highlight');
+    el.setAttribute('stroke','#262a3a');
+    el.setAttribute('stroke-width','1');
+  });
+}
+
+function toggleFolder(el) {
+  el.classList.toggle('collapsed');
+  let next = el.nextElementSibling;
+  while (next && next.classList.contains('tree-item') && next.hasAttribute('data-folder')) {
+    next.style.display = el.classList.contains('collapsed') ? 'none' : '';
+    next = next.nextElementSibling;
+  }
+}
+
+function showView(view) {
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('graphView').style.display = view === 'graph' ? '' : 'none';
+  document.getElementById('flowView').classList.toggle('visible', view === 'flow');
+}
+
+buildGraph();
+</script>
+</body>
+</html>
