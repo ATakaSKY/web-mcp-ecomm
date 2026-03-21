@@ -25,6 +25,12 @@ export function ProductCard({ product }: { product: Product }) {
               {wishlisted ? "♥" : "♡"}
             </button>
             <button
+              className="btn-secondary btn-sm"
+              onClick={() => dispatch({ type: "OPEN_QUICK_BUY", productId: product.id })}
+            >
+              Quick Buy
+            </button>
+            <button
               className={`btn-primary ${inCart ? "in-cart" : ""}`}
               onClick={() => dispatch({ type: "ADD_TO_CART", productId: product.id })}
             >

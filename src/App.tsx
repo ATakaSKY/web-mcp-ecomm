@@ -6,6 +6,7 @@ import { CartView } from "./components/CartView";
 import { WishlistView } from "./components/WishlistView";
 import { CheckoutView } from "./components/CheckoutView";
 import { DeclarativeView } from "./components/DeclarativeView";
+import { QuickBuyModal } from "./components/QuickBuyModal";
 import "./App.css";
 
 function ShopApp() {
@@ -20,10 +21,9 @@ function ShopApp() {
         <div className="webmcp-banner">
           <span className="banner-dot" />
           <span>
-            <strong>WebMCP Enabled</strong> — This app exposes 6 tools via{" "}
-            <code>navigator.modelContext</code>: <em>add_to_cart</em>,{" "}
-            <em>remove_from_cart</em>, <em>toggle_wishlist</em>, <em>purchase</em>,{" "}
-            <em>get_cart</em>, <em>get_products</em>
+            <strong>WebMCP Enabled</strong> — 7 imperative tools +{" "}
+            declarative form tools via <code>navigator.modelContext</code>.{" "}
+            Try <em>open_quick_buy</em> to see a modal with dynamic tool registration.
           </span>
         </div>
         {state.view === "shop" && <ProductGrid />}
@@ -32,6 +32,7 @@ function ShopApp() {
         {state.view === "checkout" && <CheckoutView />}
         {state.view === "declarative" && <DeclarativeView />}
       </main>
+      {state.quickBuyProductId && <QuickBuyModal />}
     </>
   );
 }

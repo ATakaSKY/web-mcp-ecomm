@@ -7,6 +7,7 @@ interface State {
   wishlist: string[]; // product IDs
   view: View;
   orderPlaced: boolean;
+  quickBuyProductId: string | null;
 }
 
 type Action =
@@ -16,13 +17,16 @@ type Action =
   | { type: "TOGGLE_WISHLIST"; productId: string }
   | { type: "PURCHASE" }
   | { type: "SET_VIEW"; view: View }
-  | { type: "RESET_ORDER" };
+  | { type: "RESET_ORDER" }
+  | { type: "OPEN_QUICK_BUY"; productId: string }
+  | { type: "CLOSE_QUICK_BUY" };
 
 const initialState: State = {
   cart: [],
   wishlist: [],
   view: "shop",
   orderPlaced: false,
+  quickBuyProductId: null,
 };
 
 function findProduct(id: string): Product | undefined {
@@ -81,6 +85,10 @@ function reducer(state: State, action: Action): State {
       return { ...state, view: action.view, orderPlaced: false };
     case "RESET_ORDER":
       return { ...state, orderPlaced: false };
+    case "OPEN_QUICK_BUY":
+      return { ...state, quickBuyProductId: action.productId };
+    case "CLOSE_QUICK_BUY":
+      return { ...state, quickBuyProductId: null };
     default:
       return state;
   }

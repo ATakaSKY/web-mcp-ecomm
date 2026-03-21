@@ -17,18 +17,26 @@ export function DeclarativeView() {
   const logEndRef = useRef<HTMLDivElement>(null);
 
   function addLog(event: string, detail: string) {
-    setLogs((prev) => [...prev.slice(-49), { time: timestamp(), event, detail }]);
+    setLogs((prev) => [
+      ...prev.slice(-49),
+      { time: timestamp(), event, detail },
+    ]);
   }
 
   // Listen for WebMCP declarative events on window
   useEffect(() => {
     function onToolActivated(e: Event) {
-      const toolName = (e as CustomEvent & { toolName?: string }).toolName ?? "unknown";
-      addLog("toolactivated", `Agent activated tool "${toolName}" — form fields were auto-filled.`);
+      const toolName =
+        (e as CustomEvent & { toolName?: string }).toolName ?? "unknown";
+      addLog(
+        "toolactivated",
+        `Agent activated tool "${toolName}" — form fields were auto-filled.`,
+      );
     }
 
     function onToolCancel(e: Event) {
-      const toolName = (e as CustomEvent & { toolName?: string }).toolName ?? "unknown";
+      const toolName =
+        (e as CustomEvent & { toolName?: string }).toolName ?? "unknown";
       addLog("toolcancel", `Agent cancelled tool "${toolName}".`);
     }
 
@@ -48,10 +56,12 @@ export function DeclarativeView() {
     <section className="view-section decl-view">
       <h2 className="view-title">Declarative API — Live Examples</h2>
       <p className="decl-intro">
-        The Declarative API lets you turn <strong>existing HTML forms</strong> into WebMCP tools
-        by adding a few attributes — <strong>no JavaScript required</strong> for registration.
-        Below are three forms, each demonstrating different features.
-        Open the <em>Model Context Tool Inspector</em> extension to see these tools appear automatically.
+        The Declarative API lets you turn <strong>existing HTML forms</strong>{" "}
+        into WebMCP tools by adding a few attributes —{" "}
+        <strong>no JavaScript required</strong> for registration. Below are
+        three forms, each demonstrating different features. Open the{" "}
+        <em>Model Context Tool Inspector</em> extension to see these tools
+        appear automatically.
       </p>
 
       <div className="decl-grid">
@@ -67,11 +77,17 @@ export function DeclarativeView() {
               {`<form\n  toolname="quick_add_to_cart"\n  tooldescription="Quickly add a product to the cart by selecting\n    the product and quantity."\n  toolautosubmit\n>`}
             </code>
             <ul className="annotation-notes">
-              <li><code>toolname</code> — registers this form as a tool the agent can call</li>
-              <li><code>tooldescription</code> — tells the agent what this tool does</li>
               <li>
-                <code>toolautosubmit</code> — form submits automatically after the agent fills
-                fields (no human click needed)
+                <code>toolname</code> — registers this form as a tool the agent
+                can call
+              </li>
+              <li>
+                <code>tooldescription</code> — tells the agent what this tool
+                does
+              </li>
+              <li>
+                <code>toolautosubmit</code> — form submits automatically after
+                the agent fills fields (no human click needed)
               </li>
             </ul>
           </div>
@@ -87,17 +103,22 @@ export function DeclarativeView() {
               const qty = fd.get("quantity") as string;
               const product = products.find((p) => p.id === productId);
 
-              const se = e.nativeEvent as SubmitEvent & { agentInvoked?: boolean; respondWith?: (v: unknown) => void };
+              const se = e.nativeEvent as SubmitEvent & {
+                agentInvoked?: boolean;
+                respondWith?: (v: unknown) => void;
+              };
               const source = se.agentInvoked ? "Agent" : "Human";
 
               addLog(
                 `submit (${source})`,
-                `quick_add_to_cart → ${qty}x "${product?.name ?? productId}"`
+                `quick_add_to_cart → ${qty}x "${product?.name ?? productId}"`,
               );
 
               if (se.agentInvoked && se.respondWith) {
                 se.respondWith(
-                  `Added ${qty}x "${product?.name}" to cart. Subtotal: $${((product?.price ?? 0) * Number(qty)).toFixed(2)}`
+                  Promise.resolve(
+                    `Added ${qty}x "${product?.name}" to cart. Subtotal: $${((product?.price ?? 0) * Number(qty)).toFixed(2)}`,
+                  ),
                 );
               }
             }}
@@ -130,7 +151,9 @@ export function DeclarativeView() {
                 toolparamdescription="Number of items to add (1–10)"
               />
             </div>
-            <button type="submit" className="btn-primary">Add to Cart</button>
+            <button type="submit" className="btn-primary">
+              Add to Cart
+            </button>
           </form>
         </div>
 
@@ -146,10 +169,23 @@ export function DeclarativeView() {
               {`<form\n  toolname="submit_feedback"\n  tooldescription="Submit feedback or a review\n    for a product."\n>`}
             </code>
             <ul className="annotation-notes">
-              <li>No <code>toolautosubmit</code> — agent fills the form, but the <strong>user must click Submit</strong></li>
-              <li>Uses <code>e.agentInvoked</code> to detect agent vs human submission</li>
-              <li>Uses <code>e.respondWith()</code> to return structured data back to the agent</li>
-              <li>Demonstrates <code>:tool-form-active</code> and <code>:tool-submit-active</code> CSS pseudo-classes (agent highlight)</li>
+              <li>
+                No <code>toolautosubmit</code> — agent fills the form, but the{" "}
+                <strong>user must click Submit</strong>
+              </li>
+              <li>
+                Uses <code>e.agentInvoked</code> to detect agent vs human
+                submission
+              </li>
+              <li>
+                Uses <code>e.respondWith()</code> to return structured data back
+                to the agent
+              </li>
+              <li>
+                Demonstrates <code>:tool-form-active</code> and{" "}
+                <code>:tool-submit-active</code> CSS pseudo-classes (agent
+                highlight)
+              </li>
             </ul>
           </div>
 
@@ -164,7 +200,10 @@ export function DeclarativeView() {
               const comment = fd.get("comment") as string;
               const product = products.find((p) => p.id === productId);
 
-              const se = e.nativeEvent as SubmitEvent & { agentInvoked?: boolean; respondWith?: (v: unknown) => void };
+              const se = e.nativeEvent as SubmitEvent & {
+                agentInvoked?: boolean;
+                respondWith?: (v: unknown) => void;
+              };
               const source = se.agentInvoked ? "Agent" : "Human";
               const msg = `Feedback for "${product?.name}": ${rating}★ — "${comment}"`;
 
@@ -172,7 +211,14 @@ export function DeclarativeView() {
               setFeedbackResult(msg);
 
               if (se.agentInvoked && se.respondWith) {
-                se.respondWith({ status: "success", product: product?.name, rating, comment });
+                se.respondWith(
+                  Promise.resolve({
+                    status: "success",
+                    product: product?.name,
+                    rating,
+                    comment,
+                  }),
+                );
               }
 
               e.currentTarget.reset();
@@ -183,7 +229,9 @@ export function DeclarativeView() {
               <label htmlFor="fb-product">Product</label>
               <select name="product" id="fb-product" required>
                 {products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -212,7 +260,9 @@ export function DeclarativeView() {
                 toolparamdescription="Free-text review or feedback comment"
               />
             </div>
-            <button type="submit" className="btn-primary">Submit Feedback</button>
+            <button type="submit" className="btn-primary">
+              Submit Feedback
+            </button>
           </form>
           {feedbackResult && (
             <div className="decl-result">
@@ -233,9 +283,19 @@ export function DeclarativeView() {
               {`<input type="radio" name="amount"\n  value="25"\n  toolparamdescription="Gift card amount\n    in USD. Choose 25, 50, or 100." />\n\n<!-- toolparamdescription on first radio\n     applies to the entire group -->`}
             </code>
             <ul className="annotation-notes">
-              <li><code>toolparamdescription</code> on the <strong>first radio</strong> in a group applies to the whole parameter</li>
-              <li>Radio buttons become an <code>enum</code> in the generated JSON schema</li>
-              <li>Text inputs get their description from the <code>&lt;label&gt;</code> by default</li>
+              <li>
+                <code>toolparamdescription</code> on the{" "}
+                <strong>first radio</strong> in a group applies to the whole
+                parameter
+              </li>
+              <li>
+                Radio buttons become an <code>enum</code> in the generated JSON
+                schema
+              </li>
+              <li>
+                Text inputs get their description from the{" "}
+                <code>&lt;label&gt;</code> by default
+              </li>
             </ul>
           </div>
 
@@ -250,19 +310,31 @@ export function DeclarativeView() {
               const amount = fd.get("amount") as string;
               const message = fd.get("message") as string;
 
-              const se = e.nativeEvent as SubmitEvent & { agentInvoked?: boolean; respondWith?: (v: unknown) => void };
+              const se = e.nativeEvent as SubmitEvent & {
+                agentInvoked?: boolean;
+                respondWith?: (v: unknown) => void;
+              };
+
+              console.log("se", se);
+
               const source = se.agentInvoked ? "Agent" : "Human";
 
               addLog(
                 `submit (${source})`,
-                `purchase_gift_card → $${amount} to ${email}${message ? ` ("${message}")` : ""}`
+                `purchase_gift_card → $${amount} to ${email}${message ? ` ("${message}")` : ""}`,
               );
 
               if (se.agentInvoked && se.respondWith) {
-                se.respondWith({
-                  status: "success",
-                  giftCard: { amount: Number(amount), recipient: email, message },
-                });
+                se.respondWith(
+                  Promise.resolve({
+                    status: "success",
+                    giftCard: {
+                      amount: Number(amount),
+                      recipient: email,
+                      message,
+                    },
+                  }),
+                );
               }
             }}
             className="decl-form"
@@ -310,7 +382,9 @@ export function DeclarativeView() {
                 toolparamdescription="Optional personal message to include with the gift card"
               />
             </div>
-            <button type="submit" className="btn-primary">Send Gift Card</button>
+            <button type="submit" className="btn-primary">
+              Send Gift Card
+            </button>
           </form>
         </div>
       </div>
@@ -319,8 +393,8 @@ export function DeclarativeView() {
       <div className="decl-css-section">
         <h3>CSS Pseudo-Classes for Agent Interactions</h3>
         <p className="decl-css-intro">
-          When an agent activates a declarative tool, Chrome applies these pseudo-classes
-          so you can visually indicate agent activity:
+          When an agent activates a declarative tool, Chrome applies these
+          pseudo-classes so you can visually indicate agent activity:
         </p>
         <div className="decl-css-grid">
           <div className="decl-css-card">
@@ -340,18 +414,23 @@ export function DeclarativeView() {
       <div className="decl-log-section">
         <div className="decl-log-header">
           <h3>Event Log</h3>
-          <button className="btn-clear" onClick={() => setLogs([])}>Clear</button>
+          <button className="btn-clear" onClick={() => setLogs([])}>
+            Clear
+          </button>
         </div>
         <div className="decl-log">
           {logs.length === 0 && (
             <div className="log-empty">
-              No events yet. Submit a form or let an agent interact with the tools above.
+              No events yet. Submit a form or let an agent interact with the
+              tools above.
             </div>
           )}
           {logs.map((log, i) => (
             <div key={i} className="log-entry">
               <span className="log-time">{log.time}</span>
-              <span className={`log-event ${log.event.includes("cancel") ? "cancel" : ""}`}>
+              <span
+                className={`log-event ${log.event.includes("cancel") ? "cancel" : ""}`}
+              >
                 {log.event}
               </span>
               <span className="log-detail">{log.detail}</span>

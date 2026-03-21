@@ -34,8 +34,8 @@ export function useWebMCP(
 
     const toolNames: string[] = [];
 
-    function register(tool: Parameters<typeof mc.registerTool>[0]) {
-      mc.registerTool(tool);
+    function register(tool: ModelContextToolDefinition) {
+      mc!.registerTool(tool);
       toolNames.push(tool.name);
       console.log(`[WebMCP] Registered tool: ${tool.name}`);
     }
@@ -259,6 +259,54 @@ export function useWebMCP(
 
         return {
           content: [{ type: "text", text: lines.join("\n") }],
+        };
+      },
+    });
+
+    // ─── TOOL 7: open_quick_buy ────────────────────────────────────
+    // This tool opens a modal with a complex checkout form.
+    // The modal contains a DECLARATIVE tool (complete_quick_buy) that
+    // only registers when the modal is in the DOM — demonstrating
+    // dynamic tool lifecycle tied to UI state.
+    register({
+      name: "open_quick_buy",
+      description:
+        "Open the Quick Buy modal for a specific product. This shows a checkout " +
+        "form where the user (or agent) can fill in shipping address, shipping method, " +
+        "gift options, and payment. Once open, a separate tool called 'complete_quick_buy' " +
+        "becomes available to fill and submit the checkout form.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          product_id: {
+            type: "string",
+            description: "The product ID to open the Quick Buy modal for.",
+            enum: products.map((p) => p.id),
+          },
+        },
+        required: ["product_id"],
+      },
+      execute: (args) => {
+        const id = args.product_id as string;
+        const product = products.find((p) => p.id === id);
+
+        if (!product) {
+          return {
+            content: [{
+              type: "text",
+              text: `Error: product "${id}" not found. Valid IDs: ${products.map((p) => p.id).join(", ")}`,
+            }],
+          };
+        }
+
+        dispatch({ type: "OPEN_QUICK_BUY", productId: id });
+
+        return {
+          content: [{
+            type: "text",
+            text: `Quick Buy modal opened for "${product.name}" ($${product.price.toFixed(2)}). ` +
+              `A new tool "complete_quick_buy" is now available to fill in the checkout form.`,
+          }],
         };
       },
     });
