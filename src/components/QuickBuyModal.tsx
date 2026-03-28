@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../store/StoreContext";
 import { products } from "../data/products";
 
@@ -23,21 +23,23 @@ export function QuickBuyModal() {
   const backdropRef = useRef<HTMLDivElement>(null);
 
   const product = products.find((p) => p.id === state.quickBuyProductId);
-  if (!product) return null;
 
-  function close() {
+  const close = useCallback(() => {
     setOrderSuccess(false);
     dispatch({ type: "CLOSE_QUICK_BUY" });
-  }
+  }, [dispatch]);
 
-  // Close on Escape key
+  // Close on Escape key (only while modal is open)
   useEffect(() => {
+    if (!state.quickBuyProductId) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") close();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [state.quickBuyProductId, close]);
+
+  if (!product) return null;
 
   // Close on backdrop click
   function onBackdropClick(e: React.MouseEvent) {

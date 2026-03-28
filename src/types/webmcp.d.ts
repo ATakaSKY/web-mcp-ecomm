@@ -15,8 +15,14 @@ interface ModelContextToolResult {
 }
 
 interface ModelContext {
-  registerTool(tool: ModelContextToolDefinition): void;
-  unregisterTool(name: string): void;
+  /** Adds a single tool to the current context. Pass {@link AbortSignal} to unregister via {@link AbortController#abort}. */
+  registerTool(
+    tool: ModelContextToolDefinition,
+    options?: { signal?: AbortSignal }
+  ): void;
+
+  /** Removes a tool by name. Deprecated; prefer aborting the signal passed to {@link registerTool}. */
+  unregisterTool?(name: string): void;
 }
 
 interface Navigator {
@@ -26,6 +32,7 @@ interface Navigator {
 // Extend React's JSX types to recognize WebMCP HTML attributes.
 // These are new attributes proposed by the WebMCP spec that Chrome 146+
 // understands, but React/TS doesn't have built-in definitions for yet.
+/* eslint-disable @typescript-eslint/no-unused-vars -- generic matches React's HTMLAttributes<T> */
 declare namespace React {
   interface FormHTMLAttributes<T> {
     toolname?: string;
@@ -45,3 +52,4 @@ declare namespace React {
     toolparamdescription?: string;
   }
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */

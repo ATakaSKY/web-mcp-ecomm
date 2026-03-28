@@ -1,13 +1,17 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import type { Dispatch } from "react";
 import { products } from "../data/products";
 import type { CartItem } from "../types";
+import type { StoreAction } from "../types";
 
 /**
  * Registers WebMCP tools with navigator.modelContext so AI agents
  * can interact with the shop programmatically.
  *
  * Each tool follows the imperative API pattern:
- *   navigator.modelContext.registerTool({ name, description, inputSchema, execute })
+ *   navigator.modelContext.registerTool({ name, description, inputSchema, execute }, { signal })
+ *
+ * Cleanup uses AbortController.abort() (and unregisterTool? during the Chrome transition).
  *
  * We pass the current state + dispatch via refs so the execute callbacks
  * always see fresh values without re-registering on every render.
@@ -15,12 +19,15 @@ import type { CartItem } from "../types";
 export function useWebMCP(
   cart: CartItem[],
   wishlist: string[],
-  dispatch: React.Dispatch<any>
+  dispatch: Dispatch<StoreAction>
 ) {
   const cartRef = useRef(cart);
   const wishlistRef = useRef(wishlist);
-  cartRef.current = cart;
-  wishlistRef.current = wishlist;
+
+  useLayoutEffect(() => {
+    cartRef.current = cart;
+    wishlistRef.current = wishlist;
+  }, [cart, wishlist]);
 
   useEffect(() => {
     const mc = navigator.modelContext;
@@ -33,9 +40,10 @@ export function useWebMCP(
     }
 
     const toolNames: string[] = [];
+    const controller = new AbortController();
 
     function register(tool: ModelContextToolDefinition) {
-      mc!.registerTool(tool);
+      mc!.registerTool(tool, { signal: controller.signal });
       toolNames.push(tool.name);
       console.log(`[WebMCP] Registered tool: ${tool.name}`);
     }
@@ -311,16 +319,17 @@ export function useWebMCP(
       },
     });
 
-    // Cleanup: unregister all tools on unmount
+    // Cleanup: unregister all tools on unmount (signal + legacy unregister during transition)
     return () => {
       for (const name of toolNames) {
         try {
-          mc.unregisterTool(name);
+          mc.unregisterTool?.(name);
           console.log(`[WebMCP] Unregistered tool: ${name}`);
         } catch {
           // tool may already be gone
         }
       }
+      controller.abort();
     };
   }, [dispatch]);
 }

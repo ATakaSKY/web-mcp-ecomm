@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type ReactNode } from "react";
-import type { CartItem, Product, View } from "../types";
+import type { CartItem, Product, StoreAction, View } from "../types";
 import { products } from "../data/products";
 
 interface State {
@@ -9,17 +9,6 @@ interface State {
   orderPlaced: boolean;
   quickBuyProductId: string | null;
 }
-
-type Action =
-  | { type: "ADD_TO_CART"; productId: string; quantity?: number }
-  | { type: "REMOVE_FROM_CART"; productId: string }
-  | { type: "UPDATE_QUANTITY"; productId: string; quantity: number }
-  | { type: "TOGGLE_WISHLIST"; productId: string }
-  | { type: "PURCHASE" }
-  | { type: "SET_VIEW"; view: View }
-  | { type: "RESET_ORDER" }
-  | { type: "OPEN_QUICK_BUY"; productId: string }
-  | { type: "CLOSE_QUICK_BUY" };
 
 const initialState: State = {
   cart: [],
@@ -33,7 +22,7 @@ function findProduct(id: string): Product | undefined {
   return products.find((p) => p.id === id);
 }
 
-function reducer(state: State, action: Action): State {
+function reducer(state: State, action: StoreAction): State {
   switch (action.type) {
     case "ADD_TO_CART": {
       const product = findProduct(action.productId);
@@ -96,7 +85,7 @@ function reducer(state: State, action: Action): State {
 
 interface StoreContextValue {
   state: State;
-  dispatch: React.Dispatch<Action>;
+  dispatch: React.Dispatch<StoreAction>;
   cartTotal: number;
   cartCount: number;
 }
@@ -116,6 +105,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Companion hook for {@link StoreProvider}; colocated for a single context module. */
+// eslint-disable-next-line react-refresh/only-export-components -- allow useStore next to provider
 export function useStore() {
   const ctx = useContext(StoreContext);
   if (!ctx) throw new Error("useStore must be inside StoreProvider");
