@@ -1,0 +1,28 @@
+# Local Postgres for Phase 2+ (Drizzle, /api/products).
+# Usage:
+#   docker compose up -d
+#   Copy .env.example → .env and set DATABASE_URL (see comment in .env.example).
+#   npm run db:push && npm run db:seed
+#   npx vercel dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: web-mcp-shop-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: webmcp
+      POSTGRES_PASSWORD: webmcp
+      POSTGRES_DB: webmcp
+    volumes:
+      - webmcp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webmcp -d webmcp"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  webmcp_pgdata:

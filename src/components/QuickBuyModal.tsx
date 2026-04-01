@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../store/StoreContext";
-import { products } from "../data/products";
 
 /**
  * QuickBuyModal — A modal with a complex multi-step checkout form.
@@ -22,7 +21,7 @@ export function QuickBuyModal() {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
 
-  const product = products.find((p) => p.id === state.quickBuyProductId);
+  const product = state.products?.find((p) => p.id === state.quickBuyProductId);
 
   const close = useCallback(() => {
     setOrderSuccess(false);

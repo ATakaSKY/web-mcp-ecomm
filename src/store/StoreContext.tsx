@@ -6,10 +6,12 @@ import {
   type ReactNode,
 } from "react";
 import type { CartItem, Product, StoreAction, View } from "../types";
-import { products } from "../data/products";
 import { hydrateCart, loadPersisted, sanitizeWishlist, savePersisted } from "../lib/persist";
 
 interface State {
+  products: Product[] | null;
+  productsLoading: boolean;
+  productsError: string | null;
   cart: CartItem[];
   wishlist: string[]; // product IDs
   view: View;
@@ -19,25 +21,46 @@ interface State {
 
 function init(): State {
   const persisted = loadPersisted();
-  const wishlist = sanitizeWishlist(persisted.wishlist, products);
-  const cart = hydrateCart(persisted.cartLines, products);
   return {
-    cart,
-    wishlist,
+    products: null,
+    productsLoading: true,
+    productsError: null,
+    cart: [],
+    wishlist: persisted.wishlist,
     view: "shop",
     orderPlaced: false,
     quickBuyProductId: null,
   };
 }
 
-function findProduct(id: string): Product | undefined {
-  return products.find((p) => p.id === id);
+function findProduct(state: State, id: string): Product | undefined {
+  return state.products?.find((p) => p.id === id);
 }
 
 function reducer(state: State, action: StoreAction): State {
   switch (action.type) {
+    case "SET_PRODUCTS": {
+      const persisted = loadPersisted();
+      const catalog = action.products;
+      const wishlist = sanitizeWishlist(persisted.wishlist, catalog);
+      const cart = hydrateCart(persisted.cartLines, catalog);
+      return {
+        ...state,
+        products: catalog,
+        productsLoading: false,
+        productsError: null,
+        wishlist,
+        cart,
+      };
+    }
+    case "SET_PRODUCTS_ERROR":
+      return {
+        ...state,
+        productsLoading: false,
+        productsError: action.error,
+      };
     case "ADD_TO_CART": {
-      const product = findProduct(action.productId);
+      const product = findProduct(state, action.productId);
       if (!product) return state;
       const existing = state.cart.find((i) => i.product.id === action.productId);
       if (existing) {
@@ -108,6 +131,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, init);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const base = import.meta.env.VITE_API_BASE ?? "";
+      try {
+        const res = await fetch(`${base}/api/products`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: unknown = await res.json();
+        if (!Array.isArray(data)) throw new Error("Invalid catalog response");
+        if (!cancelled) dispatch({ type: "SET_PRODUCTS", products: data as Product[] });
+      } catch {
+        try {
+          const mod = await import("../data/products");
+          if (!cancelled) dispatch({ type: "SET_PRODUCTS", products: mod.products });
+        } catch {
+          if (!cancelled)
+            dispatch({
+              type: "SET_PRODUCTS_ERROR",
+              error: "Could not load products",
+            });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!state.products) return;
     savePersisted({
       cartLines: state.cart.map((i) => ({
         productId: i.product.id,
@@ -115,7 +167,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })),
       wishlist: state.wishlist,
     });
-  }, [state.cart, state.wishlist]);
+  }, [state.products, state.cart, state.wishlist]);
 
   const cartTotal = state.cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
   const cartCount = state.cart.reduce((sum, i) => sum + i.quantity, 0);
@@ -127,7 +179,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Companion hook for {@link StoreProvider}; colocated for a single context module. */
 // eslint-disable-next-line react-refresh/only-export-components -- allow useStore next to provider
 export function useStore() {
   const ctx = useContext(StoreContext);

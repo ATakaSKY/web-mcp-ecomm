@@ -7,9 +7,18 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx scripts/seed.ts",
+    "docker:db:up": "docker compose up -d",
+    "docker:db:down": "docker compose down",
+    "docker:db:logs": "docker compose logs -f db"
   },
   "dependencies": {
+    "drizzle-orm": "^0.38.4",
+    "postgres": "^3.4.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
@@ -18,11 +27,15 @@
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vercel/node": "^5.0.0",
     "@vitejs/plugin-react": "^6.0.0",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.4",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "tsx": "^4.19.3",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.0"

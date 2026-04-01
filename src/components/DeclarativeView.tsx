@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { products } from "../data/products";
+import { useStore } from "../store/StoreContext";
 
 interface LogEntry {
   time: string;
@@ -12,6 +12,8 @@ function timestamp() {
 }
 
 export function DeclarativeView() {
+  const { state, dispatch } = useStore();
+  const catalog = state.products ?? [];
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [feedbackResult, setFeedbackResult] = useState<string | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,15 @@ export function DeclarativeView() {
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
+
+  if (state.productsLoading || catalog.length === 0) {
+    return (
+      <section className="view-section decl-view empty-state">
+        <h2 className="view-title">Declarative API — Live Examples</h2>
+        <p>Loading product catalog for form demos…</p>
+      </section>
+    );
+  }
 
   return (
     <section className="view-section decl-view">
@@ -101,7 +112,11 @@ export function DeclarativeView() {
               const fd = new FormData(e.currentTarget);
               const productId = fd.get("product") as string;
               const qty = fd.get("quantity") as string;
-              const product = products.find((p) => p.id === productId);
+              const product = catalog.find((p) => p.id === productId);
+              const quantityNum = Math.min(99, Math.max(1, Number(qty) || 1));
+              if (product) {
+                dispatch({ type: "ADD_TO_CART", productId, quantity: quantityNum });
+              }
 
               const se = e.nativeEvent as SubmitEvent & {
                 agentInvoked?: boolean;
@@ -117,7 +132,9 @@ export function DeclarativeView() {
               if (se.agentInvoked && se.respondWith) {
                 se.respondWith(
                   Promise.resolve(
-                    `Added ${qty}x "${product?.name}" to cart. Subtotal: $${((product?.price ?? 0) * Number(qty)).toFixed(2)}`,
+                    product
+                      ? `Added ${quantityNum}x "${product.name}" to cart. Subtotal: $${(product.price * quantityNum).toFixed(2)}`
+                      : `Unknown product: ${productId}`,
                   ),
                 );
               }
@@ -132,7 +149,7 @@ export function DeclarativeView() {
                 required
                 toolparamdescription="The product to add. Use the product ID."
               >
-                {products.map((p) => (
+                {catalog.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} — ${p.price.toFixed(2)}
                   </option>
@@ -198,7 +215,7 @@ export function DeclarativeView() {
               const productId = fd.get("product") as string;
               const rating = fd.get("rating") as string;
               const comment = fd.get("comment") as string;
-              const product = products.find((p) => p.id === productId);
+              const product = catalog.find((p) => p.id === productId);
 
               const se = e.nativeEvent as SubmitEvent & {
                 agentInvoked?: boolean;
@@ -228,7 +245,7 @@ export function DeclarativeView() {
             <div className="form-field">
               <label htmlFor="fb-product">Product</label>
               <select name="product" id="fb-product" required>
-                {products.map((p) => (
+                {catalog.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>

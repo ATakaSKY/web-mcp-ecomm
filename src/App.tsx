@@ -12,7 +12,7 @@ import "./App.css";
 function ShopApp() {
   const { state, dispatch } = useStore();
 
-  useWebMCP(state.cart, state.wishlist, dispatch);
+  useWebMCP(state.cart, state.wishlist, dispatch, state.products);
 
   return (
     <>
@@ -21,7 +21,7 @@ function ShopApp() {
         <div className="webmcp-banner">
           <span className="banner-dot" />
           <span>
-            <strong>WebMCP Enabled</strong> — 7 imperative tools +{" "}
+            <strong>WebMCP Enabled</strong> — imperative tools (registered when the catalog loads) +{" "}
             declarative form tools via <code>navigator.modelContext</code>.{" "}
             Try <em>open_quick_buy</em> to see a modal with dynamic tool registration.
           </span>

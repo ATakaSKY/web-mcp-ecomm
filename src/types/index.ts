@@ -19,6 +19,8 @@ export type StoreAction =
   | { type: "REMOVE_FROM_CART"; productId: string }
   | { type: "UPDATE_QUANTITY"; productId: string; quantity: number }
   | { type: "TOGGLE_WISHLIST"; productId: string }
+  | { type: "SET_PRODUCTS"; products: Product[] }
+  | { type: "SET_PRODUCTS_ERROR"; error: string }
   | { type: "PURCHASE" }
   | { type: "SET_VIEW"; view: View }
   | { type: "RESET_ORDER" }

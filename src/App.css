@@ -73,6 +73,11 @@
   padding: 1.5rem 2rem 4rem;
 }
 
+.error-text {
+  color: var(--danger, #c62828);
+  font-size: 0.95rem;
+}
+
 /* ────── WebMCP Banner ────── */
 .webmcp-banner {
   display: flex;

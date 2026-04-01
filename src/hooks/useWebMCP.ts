@@ -1,46 +1,45 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch } from "react";
-import { products } from "../data/products";
-import type { CartItem } from "../types";
+import type { CartItem, Product } from "../types";
 import type { StoreAction } from "../types";
 
 /**
- * Registers WebMCP tools with navigator.modelContext so AI agents
- * can interact with the shop programmatically.
- *
- * Each tool follows the imperative API pattern:
- *   navigator.modelContext.registerTool({ name, description, inputSchema, execute }, { signal })
- *
- * Cleanup uses AbortController.abort() (and unregisterTool? during the Chrome transition).
- *
- * We pass the current state + dispatch via refs so the execute callbacks
- * always see fresh values without re-registering on every render.
+ * Registers WebMCP tools when the catalog is loaded. Tool definitions use
+ * string `product_id` (no enum) so they stay valid as the API catalog changes;
+ * agents should call get_products or list_products for current IDs.
  */
 export function useWebMCP(
   cart: CartItem[],
   wishlist: string[],
-  dispatch: Dispatch<StoreAction>
+  dispatch: Dispatch<StoreAction>,
+  products: Product[] | null,
 ) {
   const cartRef = useRef(cart);
   const wishlistRef = useRef(wishlist);
+  const productsRef = useRef(products);
 
   useLayoutEffect(() => {
     cartRef.current = cart;
     wishlistRef.current = wishlist;
-  }, [cart, wishlist]);
+    productsRef.current = products;
+  }, [cart, wishlist, products]);
 
   useEffect(() => {
     const mc = navigator.modelContext;
     if (!mc) {
       console.warn(
         "[WebMCP] navigator.modelContext not available. " +
-        "Enable the flag in chrome://flags/#enable-webmcp-testing (Chrome 146+)."
+          "Enable the flag in chrome://flags/#enable-webmcp-testing (Chrome 146+).",
       );
       return;
     }
 
+    const catalog = productsRef.current;
+    if (!catalog?.length) return;
+
     const toolNames: string[] = [];
     const controller = new AbortController();
+    const categories = [...new Set(catalog.map((p) => p.category))];
 
     function register(tool: ModelContextToolDefinition) {
       mc!.registerTool(tool, { signal: controller.signal });
@@ -48,19 +47,16 @@ export function useWebMCP(
       console.log(`[WebMCP] Registered tool: ${tool.name}`);
     }
 
-    // ─── TOOL 1: add_to_cart ────────────────────────────────────────
     register({
       name: "add_to_cart",
       description:
-        "Add a product to the shopping cart. Use a product ID from the catalog. " +
-        "Optionally specify quantity (defaults to 1).",
+        "Add a product to the shopping cart. Use product_id from get_products or list_products.",
       inputSchema: {
         type: "object",
         properties: {
           product_id: {
             type: "string",
-            description: "The product ID to add to the cart.",
-            enum: products.map((p) => p.id),
+            description: "Product id from the current catalog.",
           },
           quantity: {
             type: "number",
@@ -70,95 +66,85 @@ export function useWebMCP(
         required: ["product_id"],
       },
       execute: (args) => {
+        const list = productsRef.current ?? [];
         const id = args.product_id as string;
         const qty = (args.quantity as number) || 1;
-        const product = products.find((p) => p.id === id);
-
+        const product = list.find((p) => p.id === id);
         if (!product) {
           return {
-            content: [{ type: "text", text: `Error: product "${id}" not found. Valid IDs: ${products.map((p) => p.id).join(", ")}` }],
+            content: [
+              {
+                type: "text",
+                text: `Error: product "${id}" not found. Call get_products for valid IDs.`,
+              },
+            ],
           };
         }
-
         if (qty < 1 || qty > 99) {
           return {
             content: [{ type: "text", text: `Error: quantity must be between 1 and 99.` }],
           };
         }
-
         dispatch({ type: "ADD_TO_CART", productId: id, quantity: qty });
-
         return {
-          content: [{ type: "text", text: `Added ${qty}x "${product.name}" to cart. Price: $${(product.price * qty).toFixed(2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `Added ${qty}x "${product.name}" to cart. Price: $${(product.price * qty).toFixed(2)}`,
+            },
+          ],
         };
       },
     });
 
-    // ─── TOOL 2: remove_from_cart ───────────────────────────────────
     register({
       name: "remove_from_cart",
-      description:
-        "Remove a product entirely from the shopping cart by its product ID.",
+      description: "Remove a product entirely from the shopping cart by its product ID.",
       inputSchema: {
         type: "object",
         properties: {
-          product_id: {
-            type: "string",
-            description: "The product ID to remove from the cart.",
-            enum: products.map((p) => p.id),
-          },
+          product_id: { type: "string", description: "Product ID to remove from the cart." },
         },
         required: ["product_id"],
       },
       execute: (args) => {
+        const list = productsRef.current ?? [];
         const id = args.product_id as string;
-        const inCart = cartRef.current.some((i) => i.product.id === id);
-
-        if (!inCart) {
+        if (!cartRef.current.some((i) => i.product.id === id)) {
           return {
             content: [{ type: "text", text: `Error: product "${id}" is not in the cart.` }],
           };
         }
-
         dispatch({ type: "REMOVE_FROM_CART", productId: id });
-
-        const product = products.find((p) => p.id === id)!;
+        const product = list.find((p) => p.id === id)!;
         return {
           content: [{ type: "text", text: `Removed "${product.name}" from cart.` }],
         };
       },
     });
 
-    // ─── TOOL 3: toggle_wishlist ────────────────────────────────────
     register({
       name: "toggle_wishlist",
       description:
-        "Add a product to the wishlist if it's not there, or remove it if it already is. " +
-        "Works as a toggle.",
+        "Add a product to the wishlist if it's not there, or remove it if it already is.",
       inputSchema: {
         type: "object",
         properties: {
-          product_id: {
-            type: "string",
-            description: "The product ID to toggle in the wishlist.",
-            enum: products.map((p) => p.id),
-          },
+          product_id: { type: "string", description: "Product ID to toggle in the wishlist." },
         },
         required: ["product_id"],
       },
       execute: (args) => {
+        const list = productsRef.current ?? [];
         const id = args.product_id as string;
-        const product = products.find((p) => p.id === id);
-
+        const product = list.find((p) => p.id === id);
         if (!product) {
           return {
             content: [{ type: "text", text: `Error: product "${id}" not found.` }],
           };
         }
-
         const wasWishlisted = wishlistRef.current.includes(id);
         dispatch({ type: "TOGGLE_WISHLIST", productId: id });
-
         const action = wasWishlisted ? "Removed from" : "Added to";
         return {
           content: [{ type: "text", text: `${action} wishlist: "${product.name}".` }],
@@ -166,170 +152,140 @@ export function useWebMCP(
       },
     });
 
-    // ─── TOOL 4: purchase ───────────────────────────────────────────
     register({
       name: "purchase",
       description:
-        "Complete the purchase of all items currently in the cart. " +
-        "Clears the cart and places the order. " +
-        "Only call this when the user explicitly wants to check out.",
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
+        "Complete the purchase for all items in the cart (demo: clears cart and shows checkout). " +
+        "Only call when the user explicitly wants to check out.",
+      inputSchema: { type: "object", properties: {} },
       execute: () => {
         const currentCart = cartRef.current;
-
         if (currentCart.length === 0) {
           return {
             content: [{ type: "text", text: "Error: cart is empty. Add items before purchasing." }],
           };
         }
-
-        const total = currentCart.reduce(
-          (sum, i) => sum + i.product.price * i.quantity,
-          0
-        );
-        const summary = currentCart
-          .map((i) => `${i.quantity}x ${i.product.name}`)
-          .join(", ");
-
+        const total = currentCart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+        const summary = currentCart.map((i) => `${i.quantity}x ${i.product.name}`).join(", ");
         dispatch({ type: "PURCHASE" });
-
         return {
-          content: [{
-            type: "text",
-            text: `Order placed! Items: ${summary}. Total: $${total.toFixed(2)}. Thank you for your purchase!`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Order placed! Items: ${summary}. Total: $${total.toFixed(2)}. Thank you!`,
+            },
+          ],
         };
       },
     });
 
-    // ─── TOOL 5: get_cart ───────────────────────────────────────────
     register({
       name: "get_cart",
-      description:
-        "View the current contents of the shopping cart, including quantities and prices.",
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      description: "View the current shopping cart with quantities and prices.",
+      inputSchema: { type: "object", properties: {} },
       execute: () => {
         const currentCart = cartRef.current;
-
         if (currentCart.length === 0) {
-          return {
-            content: [{ type: "text", text: "The cart is empty." }],
-          };
+          return { content: [{ type: "text", text: "The cart is empty." }] };
         }
-
         const lines = currentCart.map(
           (i) =>
-            `• ${i.quantity}x ${i.product.name} — $${(i.product.price * i.quantity).toFixed(2)}`
+            `• ${i.quantity}x ${i.product.name} — $${(i.product.price * i.quantity).toFixed(2)}`,
         );
-        const total = currentCart.reduce(
-          (sum, i) => sum + i.product.price * i.quantity,
-          0
-        );
+        const total = currentCart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
         lines.push(`\nTotal: $${total.toFixed(2)}`);
-
-        return {
-          content: [{ type: "text", text: lines.join("\n") }],
-        };
+        return { content: [{ type: "text", text: lines.join("\n") }] };
       },
     });
 
-    // ─── TOOL 6: get_products ───────────────────────────────────────
     register({
       name: "get_products",
       description:
-        "List all available products in the catalog with their IDs, names, and prices. " +
-        "Use the returned product IDs with other tools.",
+        "List all products with IDs, names, and prices. Use these IDs with other tools.",
       inputSchema: {
         type: "object",
         properties: {
           category: {
             type: "string",
             description: "Optional category filter.",
-            enum: [...new Set(products.map((p) => p.category))],
+            ...(categories.length > 0 ? { enum: categories } : {}),
           },
         },
       },
       execute: (args) => {
+        const list = productsRef.current ?? [];
         const category = args.category as string | undefined;
-        const filtered = category
-          ? products.filter((p) => p.category === category)
-          : products;
-
+        const filtered = category ? list.filter((p) => p.category === category) : list;
         const lines = filtered.map(
-          (p) => `• [${p.id}] ${p.name} — $${p.price.toFixed(2)} (${p.category})`
+          (p) => `• [${p.id}] ${p.name} — $${p.price.toFixed(2)} (${p.category})`,
         );
-
-        return {
-          content: [{ type: "text", text: lines.join("\n") }],
-        };
+        return { content: [{ type: "text", text: lines.join("\n") }] };
       },
     });
 
-    // ─── TOOL 7: open_quick_buy ────────────────────────────────────
-    // This tool opens a modal with a complex checkout form.
-    // The modal contains a DECLARATIVE tool (complete_quick_buy) that
-    // only registers when the modal is in the DOM — demonstrating
-    // dynamic tool lifecycle tied to UI state.
+    register({
+      name: "list_products",
+      description:
+        "Compact catalog listing (same data as get_products). Use when you only need IDs and names.",
+      inputSchema: { type: "object", properties: {} },
+      execute: () => {
+        const list = productsRef.current ?? [];
+        const lines = list.map(
+          (p) => `• [${p.id}] ${p.name} — $${p.price.toFixed(2)} (${p.category})`,
+        );
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      },
+    });
+
     register({
       name: "open_quick_buy",
       description:
-        "Open the Quick Buy modal for a specific product. This shows a checkout " +
-        "form where the user (or agent) can fill in shipping address, shipping method, " +
-        "gift options, and payment. Once open, a separate tool called 'complete_quick_buy' " +
-        "becomes available to fill and submit the checkout form.",
+        "Open the Quick Buy modal for a product. When open, declarative tool complete_quick_buy is available.",
       inputSchema: {
         type: "object",
         properties: {
-          product_id: {
-            type: "string",
-            description: "The product ID to open the Quick Buy modal for.",
-            enum: products.map((p) => p.id),
-          },
+          product_id: { type: "string", description: "Product ID for Quick Buy." },
         },
         required: ["product_id"],
       },
       execute: (args) => {
+        const list = productsRef.current ?? [];
         const id = args.product_id as string;
-        const product = products.find((p) => p.id === id);
-
+        const product = list.find((p) => p.id === id);
         if (!product) {
           return {
-            content: [{
-              type: "text",
-              text: `Error: product "${id}" not found. Valid IDs: ${products.map((p) => p.id).join(", ")}`,
-            }],
+            content: [
+              {
+                type: "text",
+                text: `Error: product "${id}" not found. Call get_products for valid IDs.`,
+              },
+            ],
           };
         }
-
         dispatch({ type: "OPEN_QUICK_BUY", productId: id });
-
         return {
-          content: [{
-            type: "text",
-            text: `Quick Buy modal opened for "${product.name}" ($${product.price.toFixed(2)}). ` +
-              `A new tool "complete_quick_buy" is now available to fill in the checkout form.`,
-          }],
+          content: [
+            {
+              type: "text",
+              text:
+                `Quick Buy opened for "${product.name}" ($${product.price.toFixed(2)}). ` +
+                `Use complete_quick_buy to fill the form.`,
+            },
+          ],
         };
       },
     });
 
-    // Cleanup: unregister all tools on unmount (signal + legacy unregister during transition)
     return () => {
       for (const name of toolNames) {
         try {
-          mc.unregisterTool?.(name);
+          mc!.unregisterTool?.(name);
           console.log(`[WebMCP] Unregistered tool: ${name}`);
         } catch {
-          // tool may already be gone
+          // ignore
         }
       }
       controller.abort();
     };
-  }, [dispatch]);
+  }, [dispatch, products]);
 }
