@@ -1,6 +1,13 @@
-import { createContext, useContext, useReducer, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  type ReactNode,
+} from "react";
 import type { CartItem, Product, StoreAction, View } from "../types";
 import { products } from "../data/products";
+import { hydrateCart, loadPersisted, sanitizeWishlist, savePersisted } from "../lib/persist";
 
 interface State {
   cart: CartItem[];
@@ -10,13 +17,18 @@ interface State {
   quickBuyProductId: string | null;
 }
 
-const initialState: State = {
-  cart: [],
-  wishlist: [],
-  view: "shop",
-  orderPlaced: false,
-  quickBuyProductId: null,
-};
+function init(): State {
+  const persisted = loadPersisted();
+  const wishlist = sanitizeWishlist(persisted.wishlist, products);
+  const cart = hydrateCart(persisted.cartLines, products);
+  return {
+    cart,
+    wishlist,
+    view: "shop",
+    orderPlaced: false,
+    quickBuyProductId: null,
+  };
+}
 
 function findProduct(id: string): Product | undefined {
   return products.find((p) => p.id === id);
@@ -34,7 +46,7 @@ function reducer(state: State, action: StoreAction): State {
           cart: state.cart.map((i) =>
             i.product.id === action.productId
               ? { ...i, quantity: i.quantity + (action.quantity ?? 1) }
-              : i
+              : i,
           ),
         };
       }
@@ -55,7 +67,7 @@ function reducer(state: State, action: StoreAction): State {
       return {
         ...state,
         cart: state.cart.map((i) =>
-          i.product.id === action.productId ? { ...i, quantity: action.quantity } : i
+          i.product.id === action.productId ? { ...i, quantity: action.quantity } : i,
         ),
       };
     }
@@ -93,7 +105,17 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, undefined, init);
+
+  useEffect(() => {
+    savePersisted({
+      cartLines: state.cart.map((i) => ({
+        productId: i.product.id,
+        quantity: i.quantity,
+      })),
+      wishlist: state.wishlist,
+    });
+  }, [state.cart, state.wishlist]);
 
   const cartTotal = state.cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
   const cartCount = state.cart.reduce((sum, i) => sum + i.quantity, 0);
