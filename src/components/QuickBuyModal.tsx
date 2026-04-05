@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getApiBase } from "../lib/apiBase";
 import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
 import { BannerDot } from "./BannerDot";
 import btn from "./buttons.module.css";
 import forms from "./forms.module.css";
 import pc from "./ProductCard.module.css";
+import views from "./views.module.css";
 import styles from "./QuickBuyModal.module.css";
 
 const SHIPPING_STANDARD_INR = 499;
@@ -26,15 +28,31 @@ const GIFT_WRAP_INR = 399;
  * useWebMCP.ts) that lets the agent open this modal programmatically.
  * The two-tool pattern: imperative opens UI → declarative fills form.
  */
+async function postQuickBuyOrder(productId: string, quantity: number): Promise<string> {
+  const res = await fetch(`${getApiBase()}/api/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lines: [{ productId, quantity }] }),
+  });
+  const data = (await res.json()) as { error?: string; orderId?: string };
+  if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+  if (!data.orderId) throw new Error("Invalid response from server");
+  return data.orderId;
+}
+
 export function QuickBuyModal() {
   const { state, dispatch } = useStore();
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [submitErr, setSubmitErr] = useState<string | null>(null);
+  const [submitBusy, setSubmitBusy] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
 
   const product = state.products?.find((p) => p.id === state.quickBuyProductId);
 
   const close = useCallback(() => {
     setOrderSuccess(false);
+    setSubmitErr(null);
+    setSubmitBusy(false);
     dispatch({ type: "CLOSE_QUICK_BUY" });
   }, [dispatch]);
 
@@ -64,6 +82,11 @@ export function QuickBuyModal() {
           <p>
             Your Quick Buy order for <strong>{product.name}</strong> has been placed.
           </p>
+          {state.lastOrderId && (
+            <p className={styles.orderIdLine}>
+              Order ID: <code>{state.lastOrderId}</code>
+            </p>
+          )}
           <button type="button" className={btn.btnPrimary} onClick={close}>
             Done
           </button>
@@ -107,6 +130,8 @@ export function QuickBuyModal() {
           </div>
         </div>
 
+        {submitErr && <p className={views.errorText}>{submitErr}</p>}
+
         {/*
           THE DECLARATIVE FORM
           - toolname: registers this as a callable tool
@@ -133,7 +158,7 @@ export function QuickBuyModal() {
             const orderData = {
               product: product.name,
               price: product.price,
-              quantity: Number(fd.get("quantity")) || 1,
+              quantity: Math.min(99, Math.max(1, Number(fd.get("quantity")) || 1)),
               fullName: fd.get("full_name"),
               address: fd.get("address"),
               city: fd.get("city"),
@@ -153,22 +178,55 @@ export function QuickBuyModal() {
                   : 0) +
               (orderData.giftWrap ? GIFT_WRAP_INR : 0);
 
-            console.log("[QuickBuy] Order placed:", orderData);
+            const run = async () => {
+              const orderId = await postQuickBuyOrder(product.id, orderData.quantity);
+              dispatch({ type: "QUICK_BUY_ORDER_SUCCESS", orderId });
+              return orderId;
+            };
+
+            const onFailure = (message: string) => {
+              if (se.agentInvoked && se.respondWith) {
+                se.respondWith(Promise.resolve({ status: "error" as const, message }));
+                return;
+              }
+              setSubmitErr(message);
+            };
 
             if (se.agentInvoked && se.respondWith) {
-              const resultPromise = Promise.resolve({
-                status: "success",
-                order: { ...orderData, total: total.toFixed(2) },
-                message: `Order confirmed! ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: ${formatInr(total)}.`,
-              });
-              se.respondWith(resultPromise);
-              resultPromise.then(() => {
-                setTimeout(() => setOrderSuccess(true), 100);
-              });
+              se.respondWith(
+                run()
+                  .then((orderId) => {
+                    setTimeout(() => setOrderSuccess(true), 100);
+                    return {
+                      status: "success" as const,
+                      orderId,
+                      order: { ...orderData, total: total.toFixed(2) },
+                      message: `Order confirmed! Order id: ${orderId}. ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: ${formatInr(total)}.`,
+                    };
+                  })
+                  .catch((err: unknown) => ({
+                    status: "error" as const,
+                    message:
+                      err instanceof Error
+                        ? err.message
+                        : "Network error. Use vercel dev with DATABASE_URL for orders.",
+                  })),
+              );
               return;
             }
 
-            setOrderSuccess(true);
+            setSubmitErr(null);
+            setSubmitBusy(true);
+            run()
+              .then(() => setOrderSuccess(true))
+              .catch((err: unknown) => {
+                onFailure(
+                  err instanceof Error
+                    ? err.message
+                    : "Network error. Use vercel dev with DATABASE_URL for orders.",
+                );
+              })
+              .finally(() => setSubmitBusy(false));
           }}
           className={forms.modalForm}
         >
@@ -317,11 +375,15 @@ export function QuickBuyModal() {
 
           {/* Submit */}
           <div className={styles.modalFormFooter}>
-            <button type="button" className={btn.btnSecondary} onClick={close}>
+            <button type="button" className={btn.btnSecondary} onClick={close} disabled={submitBusy}>
               Cancel
             </button>
-            <button type="submit" className={`${btn.btnPrimary} ${btn.btnCheckout}`}>
-              Confirm Purchase
+            <button
+              type="submit"
+              className={`${btn.btnPrimary} ${btn.btnCheckout}`}
+              disabled={submitBusy}
+            >
+              {submitBusy ? "Placing order…" : "Confirm Purchase"}
             </button>
           </div>
         </form>

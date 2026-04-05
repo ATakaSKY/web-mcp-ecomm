@@ -114,6 +114,12 @@ function reducer(state: State, action: StoreAction): State {
         view: "checkout",
         lastOrderId: action.orderId,
       };
+    case "QUICK_BUY_ORDER_SUCCESS":
+      return {
+        ...state,
+        orderPlaced: true,
+        lastOrderId: action.orderId,
+      };
     case "SET_VIEW":
       return {
         ...state,
