@@ -2,7 +2,7 @@
 # Usage:
 #   docker compose up -d
 #   Copy .env.example → .env and set DATABASE_URL (see comment in .env.example).
-#   npm run db:push && npm run db:seed
+#   npm run db:migrate && npm run db:seed
 #   npx vercel dev
 
 services:

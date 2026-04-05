@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
 
 interface LogEntry {
@@ -133,7 +134,7 @@ export function DeclarativeView() {
                 se.respondWith(
                   Promise.resolve(
                     product
-                      ? `Added ${quantityNum}x "${product.name}" to cart. Subtotal: $${(product.price * quantityNum).toFixed(2)}`
+                      ? `Added ${quantityNum}x "${product.name}" to cart. Subtotal: ${formatInr(product.price * quantityNum)}`
                       : `Unknown product: ${productId}`,
                   ),
                 );
@@ -151,7 +152,7 @@ export function DeclarativeView() {
               >
                 {catalog.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} — ${p.price.toFixed(2)}
+                    {p.name} — {formatInr(p.price)}
                   </option>
                 ))}
               </select>
@@ -297,7 +298,7 @@ export function DeclarativeView() {
           <div className="decl-annotation">
             <div className="annotation-title">Attributes used</div>
             <code className="annotation-code">
-              {`<input type="radio" name="amount"\n  value="25"\n  toolparamdescription="Gift card amount\n    in USD. Choose 25, 50, or 100." />\n\n<!-- toolparamdescription on first radio\n     applies to the entire group -->`}
+              {`<input type="radio" name="amount"\n  value="500"\n  toolparamdescription="Gift card amount\n    in INR. Choose 500, 1000, or 2000." />\n\n<!-- toolparamdescription on first radio\n     applies to the entire group -->`}
             </code>
             <ul className="annotation-notes">
               <li>
@@ -338,7 +339,7 @@ export function DeclarativeView() {
 
               addLog(
                 `submit (${source})`,
-                `purchase_gift_card → $${amount} to ${email}${message ? ` ("${message}")` : ""}`,
+                `purchase_gift_card → ${formatInr(Number(amount))} to ${email}${message ? ` ("${message}")` : ""}`,
               );
 
               if (se.agentInvoked && se.respondWith) {
@@ -373,19 +374,19 @@ export function DeclarativeView() {
                   <input
                     type="radio"
                     name="amount"
-                    value="25"
+                    value="500"
                     defaultChecked
-                    toolparamdescription="Gift card amount in USD. Choose 25, 50, or 100."
+                    toolparamdescription="Gift card amount in INR. Choose 500, 1000, or 2000."
                   />
-                  $25
+                  {formatInr(500)}
                 </label>
                 <label className="radio-label">
-                  <input type="radio" name="amount" value="50" />
-                  $50
+                  <input type="radio" name="amount" value="1000" />
+                  {formatInr(1000)}
                 </label>
                 <label className="radio-label">
-                  <input type="radio" name="amount" value="100" />
-                  $100
+                  <input type="radio" name="amount" value="2000" />
+                  {formatInr(2000)}
                 </label>
               </div>
             </fieldset>

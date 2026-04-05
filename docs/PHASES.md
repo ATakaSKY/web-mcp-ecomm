@@ -36,17 +36,24 @@ This repo is grown in **phases**: each phase adds a slice of “real app” beha
 **Local development**
 
 - **Frontend only:** `npm run dev` — no `/api` route on Vite; fetch fails → **fallback catalog** (still useful for UI/WebMCP).
-- **Full stack:** Postgres (e.g. [Docker](../docker-compose.yml)) + `.env` with `DATABASE_URL` → `npm run db:push` && `npm run db:seed` → `npx vercel dev` so `/api/products` runs against the DB.
+- **Full stack:** Postgres (e.g. [Docker](../docker-compose.yml)) + `.env` with `DATABASE_URL` → `npm run db:migrate` && `npm run db:seed` → `npx vercel dev` so `/api/products` runs against the DB.
 
 See the main [README](../README.md) for commands and layout.
 
 ---
 
-## Phase 3 — Orders (planned)
+## Phase 3 — Orders (done)
 
-**Goal:** Real **`POST /api/orders`** with Drizzle tables (`orders`, `order_lines`), server-side validation against `products`, checkout UI calling the API (still no payment required).
+**Goal:** Persist **`POST /api/orders`** with Drizzle (`orders`, `order_lines`), prices taken from the DB at order time, checkout UI + WebMCP **`purchase`** calling the API. No payment yet (`status` stays `pending` until a later phase).
 
-**Not started** in this branch unless explicitly built.
+**What shipped**
+
+- **Schema:** `order_status` enum (`pending` \| `paid` \| `fulfilled`), [`orders`](../db/schema.ts), [`order_lines`](../db/schema.ts) with `unitPrice` per line.
+- **`POST /api/orders`** ([`api/orders.ts`](../api/orders.ts)): body `{ lines: [{ productId, quantity }] }` → **`201`** `{ orderId, totalPaise }` (order total in **paise**, 100 paise = ₹1). Returns **503** if `DATABASE_URL` is unset (orders require a DB).
+- **SPA:** [`CartView`](../src/components/CartView.tsx) posts the cart; [`PURCHASE_SUCCESS`](../src/types/index.ts) stores [`lastOrderId`](../src/store/StoreContext.tsx); [`CheckoutView`](../src/components/CheckoutView.tsx) shows the id.
+- **WebMCP:** [`purchase`](../src/hooks/useWebMCP.ts) uses the same API (async).
+
+After pulling schema changes, run **`npm run db:migrate`** against your database.
 
 ---
 
@@ -70,8 +77,8 @@ See the main [README](../README.md) for commands and layout.
 
 ## How to extend the next phase
 
-1. Agree scope (e.g. “Phase 3 only”).
-2. Add migrations or `drizzle-kit push` for new tables.
+1. Agree scope (e.g. “Phase 4 only”).
+2. Change `db/schema.ts`, run `npm run db:generate`, commit `drizzle/`, then `npm run db:migrate` (use `db:push` only for quick local experiments).
 3. Implement API routes under `api/` and keep the SPA’s **`fetch()` + env** pattern aligned with Vercel deployment.
 4. For WebMCP: keep tools **catalog-driven** (reload or `get_products` / `list_products`) so IDs stay valid when the DB changes.
 

@@ -2,7 +2,7 @@
 
 A small **React + TypeScript + Vite** app that demonstrates **WebMCP**: registering tools on `navigator.modelContext` so AI agents can drive a shop UI (cart, wishlist, checkout, and declarative HTML forms).
 
-The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** adds client persistence; **Phase 2** adds **Postgres + Drizzle** and **`GET /api/products`** while keeping cart/wishlist in the browser.
+The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** — client persistence; **Phase 2** — **Postgres + Drizzle** and **`GET /api/products`**; **Phase 3** — **`POST /api/orders`** and checkout backed by the DB (no payment yet).
 
 ---
 
@@ -29,7 +29,7 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 
 ---
 
-## Full stack locally (Postgres + `/api/products`)
+## Full stack locally (Postgres + `/api/*`)
 
 1. **Start Postgres** (Docker example):
 
@@ -48,7 +48,7 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 3. **Schema + seed**:
 
    ```bash
-   npm run db:push
+   npm run db:migrate
    npm run db:seed
    ```
 
@@ -58,7 +58,9 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
    npx vercel dev
    ```
 
-   Open the URL Vercel prints (often `http://localhost:3000`). The SPA loads products from the database when `DATABASE_URL` is available to the function.
+   Open the URL Vercel prints (often `http://localhost:3000`). **`GET /api/products`** and **`POST /api/orders`** use the database when `DATABASE_URL` is set. Plain `npm run dev` has **no** `/api` routes: catalog falls back to static data and checkout returns **503** if you only run Vite.
+
+**After schema updates:** if you changed `db/schema.ts`, run `npm run db:generate`, commit the new files under `drizzle/`, then `npm run db:migrate` on each database. After pulling someone else’s migration, run `npm run db:migrate` before `db:seed` or ordering.
 
 **Useful scripts**
 
@@ -67,7 +69,9 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 | `npm run dev`                             | Vite only; catalog fallback from `src/data/products.ts`    |
 | `npm run docker:db:up` / `docker:db:down` | Start/stop Docker Postgres                                 |
 | `npm run docker:db:logs`                  | Follow DB logs                                             |
-| `npm run db:push`                         | Push Drizzle schema (loads `.env` via `drizzle.config.ts`) |
+| `npm run db:generate`                     | Create SQL migrations from `db/schema.ts` (commit `drizzle/`) |
+| `npm run db:migrate`                      | Apply pending migrations (loads `.env` via `drizzle.config.ts`) |
+| `npm run db:push`                         | Optional: sync schema without migration files (local prototyping) |
 | `npm run db:seed`                         | Seed `products` from `src/data/products.ts`                |
 | `npm run db:studio`                       | Drizzle Studio (needs `DATABASE_URL`)                      |
 | `npm run build`                           | Typecheck + production Vite build                          |
@@ -80,8 +84,8 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 
 - Connect the repo to Vercel; `vercel.json` sets **Vite** build output to `dist`.
 - Set **`DATABASE_URL`** in the project environment (e.g. Neon or Vercel Postgres).
-- After first deploy (or anytime the schema changes), run **`npm run db:push`** and **`npm run db:seed`** against the **production** `DATABASE_URL` from a secure machine (do not commit secrets).
-- `api/products.ts` is deployed as **`GET /api/products`** automatically.
+- After first deploy (or anytime the schema changes), run **`npm run db:migrate`** and **`npm run db:seed`** against the **production** `DATABASE_URL` from a secure machine (do not commit secrets). Ship new migration files in the repo before migrating production.
+- `api/products.ts` → **`GET /api/products`**; `api/orders.ts` → **`POST /api/orders`** (requires `DATABASE_URL` in the Vercel environment).
 
 `VITE_API_BASE` is only needed if the API is hosted on a **different origin** than the SPA.
 
@@ -92,6 +96,7 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 - **State** — [`src/store/StoreContext.tsx`](src/store/StoreContext.tsx): cart, wishlist, views, catalog load state, WebMCP-related UI state.
 - **Persistence (Phase 1)** — [`src/lib/persist.ts`](src/lib/persist.ts): cart/wishlist in `localStorage`; after Phase 2, persistence syncs once the **API catalog** has loaded.
 - **Catalog (Phase 2)** — Loaded from **`GET /api/products`** with fallback to [`src/data/products.ts`](src/data/products.ts).
+- **Orders (Phase 3)** — **`POST /api/orders`** creates `orders` + `order_lines`; checkout needs **`vercel dev`** or deployed API + `DATABASE_URL`.
 - **Imperative WebMCP** — [`src/hooks/useWebMCP.ts`](src/hooks/useWebMCP.ts): tools register **after** the catalog is available; `product_id` is a **string** (use `get_products` / `list_products` for IDs).
 - **Declarative WebMCP** — [`src/components/DeclarativeView.tsx`](src/components/DeclarativeView.tsx), [`src/components/QuickBuyModal.tsx`](src/components/QuickBuyModal.tsx): forms use `toolname`, `tooldescription`, `toolparamdescription`, optional `toolautosubmit`.
 
@@ -108,7 +113,7 @@ Registered when the catalog is non-empty (`navigator.modelContext` + Chrome flag
 | `add_to_cart`      | Add by `product_id` (string); optional `quantity` (1–99).                   |
 | `remove_from_cart` | Remove line by `product_id`.                                                |
 | `toggle_wishlist`  | Toggle wishlist membership for `product_id`.                                |
-| `purchase`         | Demo checkout: clears cart and shows success view.                          |
+| `purchase`         | **`POST /api/orders`** with current cart; clears cart and shows order id (needs DB). |
 | `get_cart`         | Current lines and total.                                                    |
 | `get_products`     | List catalog; optional `category` filter (enum of current categories).      |
 | `list_products`    | Compact listing (same catalog snapshot).                                    |
@@ -130,7 +135,8 @@ TypeScript augments for WebMCP attributes: [`src/types/webmcp.d.ts`](src/types/w
 ## Project layout (high level)
 
 ```
-api/products.ts          # GET /api/products (Vercel serverless)
+api/products.ts          # GET /api/products
+api/orders.ts            # POST /api/orders
 db/                      # Drizzle schema + DB client
 drizzle.config.ts        # Drizzle Kit (+ dotenv for local .env)
 docker-compose.yml       # Optional local Postgres

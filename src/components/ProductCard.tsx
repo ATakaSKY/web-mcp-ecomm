@@ -1,4 +1,5 @@
 import type { Product } from "../types";
+import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -15,7 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
         <h3 className="product-name">{product.name}</h3>
         <p className="product-desc">{product.description}</p>
         <div className="product-footer">
-          <span className="product-price">${product.price.toFixed(2)}</span>
+          <span className="product-price">{formatInr(product.price)}</span>
           <div className="product-actions">
             <button
               className={`btn-icon ${wishlisted ? "wishlisted" : ""}`}

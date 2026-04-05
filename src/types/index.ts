@@ -21,7 +21,7 @@ export type StoreAction =
   | { type: "TOGGLE_WISHLIST"; productId: string }
   | { type: "SET_PRODUCTS"; products: Product[] }
   | { type: "SET_PRODUCTS_ERROR"; error: string }
-  | { type: "PURCHASE" }
+  | { type: "PURCHASE_SUCCESS"; orderId: string }
   | { type: "SET_VIEW"; view: View }
   | { type: "RESET_ORDER" }
   | { type: "OPEN_QUICK_BUY"; productId: string }

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
+
+const SHIPPING_STANDARD_INR = 499;
+const SHIPPING_EXPRESS_INR = 1299;
+const GIFT_WRAP_INR = 399;
 
 /**
  * QuickBuyModal — A modal with a complex multi-step checkout form.
@@ -91,7 +96,7 @@ export function QuickBuyModal() {
           <div>
             <h3>{product.name}</h3>
             <p className="product-desc">{product.description}</p>
-            <span className="product-price">${product.price.toFixed(2)}</span>
+            <span className="product-price">{formatInr(product.price)}</span>
           </div>
         </div>
 
@@ -105,7 +110,7 @@ export function QuickBuyModal() {
         <form
           toolname="complete_quick_buy"
           tooldescription={
-            `Complete a Quick Buy checkout for "${product.name}" ($${product.price.toFixed(2)}). ` +
+            `Complete a Quick Buy checkout for "${product.name}" (${formatInr(product.price)}). ` +
             "Fill in the shipping address, choose a shipping method, optionally add gift wrapping, " +
             "select a payment method, then submit. The user must click Confirm to finalize."
           }
@@ -134,8 +139,12 @@ export function QuickBuyModal() {
 
             const total =
               orderData.price * orderData.quantity +
-              (orderData.shipping === "express" ? 14.99 : orderData.shipping === "standard" ? 5.99 : 0) +
-              (orderData.giftWrap ? 4.99 : 0);
+              (orderData.shipping === "express"
+                ? SHIPPING_EXPRESS_INR
+                : orderData.shipping === "standard"
+                  ? SHIPPING_STANDARD_INR
+                  : 0) +
+              (orderData.giftWrap ? GIFT_WRAP_INR : 0);
 
             console.log("[QuickBuy] Order placed:", orderData);
 
@@ -147,7 +156,7 @@ export function QuickBuyModal() {
               const resultPromise = Promise.resolve({
                 status: "success",
                 order: { ...orderData, total: total.toFixed(2) },
-                message: `Order confirmed! ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: $${total.toFixed(2)}.`,
+                message: `Order confirmed! ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: ${formatInr(total)}.`,
               });
               se.respondWith(resultPromise);
               // Delay the UI transition so the form stays in the DOM
@@ -216,18 +225,18 @@ export function QuickBuyModal() {
                   name="city"
                   id="qb-city"
                   required
-                  placeholder="San Francisco"
+                  placeholder="Mumbai"
                 />
               </div>
               <div className="form-field">
-                <label htmlFor="qb-zip">ZIP code</label>
+                <label htmlFor="qb-zip">PIN code</label>
                 <input
                   type="text"
                   name="zip_code"
                   id="qb-zip"
                   required
-                  placeholder="94102"
-                  toolparamdescription="5-digit US ZIP code"
+                  placeholder="400001"
+                  toolparamdescription="6-digit Indian PIN code"
                 />
               </div>
             </div>
@@ -243,18 +252,22 @@ export function QuickBuyModal() {
                   name="shipping_method"
                   value="standard"
                   defaultChecked
-                  toolparamdescription="Shipping speed. 'standard' = 5-7 days ($5.99), 'express' = 1-2 days ($14.99), 'pickup' = free store pickup"
+                  toolparamdescription={`Shipping speed. 'standard' = 5-7 days (${formatInr(SHIPPING_STANDARD_INR)}), 'express' = 1-2 days (${formatInr(SHIPPING_EXPRESS_INR)}), 'pickup' = free store pickup`}
                 />
                 <div>
                   <strong>Standard</strong>
-                  <span className="radio-detail">5–7 business days — $5.99</span>
+                  <span className="radio-detail">
+                    5–7 business days — {formatInr(SHIPPING_STANDARD_INR)}
+                  </span>
                 </div>
               </label>
               <label className="radio-label">
                 <input type="radio" name="shipping_method" value="express" />
                 <div>
                   <strong>Express</strong>
-                  <span className="radio-detail">1–2 business days — $14.99</span>
+                  <span className="radio-detail">
+                    1–2 business days — {formatInr(SHIPPING_EXPRESS_INR)}
+                  </span>
                 </div>
               </label>
               <label className="radio-label">
@@ -274,9 +287,9 @@ export function QuickBuyModal() {
               <input
                 type="checkbox"
                 name="gift_wrap"
-                toolparamdescription="Set to true to add gift wrapping for $4.99"
+                toolparamdescription={`Set to true to add gift wrapping for ${formatInr(GIFT_WRAP_INR)}`}
               />
-              <span>Add gift wrapping (+$4.99)</span>
+              <span>Add gift wrapping (+{formatInr(GIFT_WRAP_INR)})</span>
             </label>
             <div className="form-field" style={{ marginTop: "0.5rem" }}>
               <label htmlFor="qb-gift-msg">Gift message (optional)</label>

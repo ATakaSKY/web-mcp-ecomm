@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { CartItem, Product, StoreAction, View } from "../types";
+import { getApiBase } from "../lib/apiBase";
 import { hydrateCart, loadPersisted, sanitizeWishlist, savePersisted } from "../lib/persist";
 
 interface State {
@@ -16,6 +17,7 @@ interface State {
   wishlist: string[]; // product IDs
   view: View;
   orderPlaced: boolean;
+  lastOrderId: string | null;
   quickBuyProductId: string | null;
 }
 
@@ -29,6 +31,7 @@ function init(): State {
     wishlist: persisted.wishlist,
     view: "shop",
     orderPlaced: false,
+    lastOrderId: null,
     quickBuyProductId: null,
   };
 }
@@ -103,10 +106,21 @@ function reducer(state: State, action: StoreAction): State {
           : [...state.wishlist, action.productId],
       };
     }
-    case "PURCHASE":
-      return { ...state, cart: [], orderPlaced: true, view: "checkout" };
+    case "PURCHASE_SUCCESS":
+      return {
+        ...state,
+        cart: [],
+        orderPlaced: true,
+        view: "checkout",
+        lastOrderId: action.orderId,
+      };
     case "SET_VIEW":
-      return { ...state, view: action.view, orderPlaced: false };
+      return {
+        ...state,
+        view: action.view,
+        orderPlaced: false,
+        lastOrderId: null,
+      };
     case "RESET_ORDER":
       return { ...state, orderPlaced: false };
     case "OPEN_QUICK_BUY":
@@ -133,7 +147,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const base = import.meta.env.VITE_API_BASE ?? "";
+      const base = getApiBase();
       try {
         const res = await fetch(`${base}/api/products`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

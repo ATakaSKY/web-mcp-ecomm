@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1775370500309,
+      "tag": "0000_chief_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775371051377,
+      "tag": "0001_orders_total_paise",
+      "breakpoints": true
+    }
+  ]
+}

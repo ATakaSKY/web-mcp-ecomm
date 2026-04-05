@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch } from "react";
+import { getApiBase } from "../lib/apiBase";
+import { formatInr } from "../lib/formatPrice";
 import type { CartItem, Product } from "../types";
 import type { StoreAction } from "../types";
 
@@ -90,7 +92,7 @@ export function useWebMCP(
           content: [
             {
               type: "text",
-              text: `Added ${qty}x "${product.name}" to cart. Price: $${(product.price * qty).toFixed(2)}`,
+                text: `Added ${qty}x "${product.name}" to cart. Price: ${formatInr(product.price * qty)}`,
             },
           ],
         };
@@ -155,10 +157,10 @@ export function useWebMCP(
     register({
       name: "purchase",
       description:
-        "Complete the purchase for all items in the cart (demo: clears cart and shows checkout). " +
-        "Only call when the user explicitly wants to check out.",
+        "Place an order for all items in the cart via POST /api/orders (requires DATABASE_URL on the server). " +
+        "Clears the cart and shows checkout on success. Only call when the user explicitly wants to check out.",
       inputSchema: { type: "object", properties: {} },
-      execute: () => {
+      execute: async () => {
         const currentCart = cartRef.current;
         if (currentCart.length === 0) {
           return {
@@ -167,15 +169,52 @@ export function useWebMCP(
         }
         const total = currentCart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
         const summary = currentCart.map((i) => `${i.quantity}x ${i.product.name}`).join(", ");
-        dispatch({ type: "PURCHASE" });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Order placed! Items: ${summary}. Total: $${total.toFixed(2)}. Thank you!`,
-            },
-          ],
-        };
+        try {
+          const res = await fetch(`${getApiBase()}/api/orders`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lines: currentCart.map((i) => ({
+                productId: i.product.id,
+                quantity: i.quantity,
+              })),
+            }),
+          });
+          const data = (await res.json()) as { error?: string; orderId?: string };
+          if (!res.ok) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Order failed: ${data.error ?? res.statusText}. Is the API running with DATABASE_URL?`,
+                },
+              ],
+            };
+          }
+          if (!data.orderId) {
+            return {
+              content: [{ type: "text", text: "Order failed: invalid server response." }],
+            };
+          }
+          dispatch({ type: "PURCHASE_SUCCESS", orderId: data.orderId });
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Order placed! Order id: ${data.orderId}. Items: ${summary}. Total: ${formatInr(total)}`,
+              },
+            ],
+          };
+        } catch {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "Network error placing order. Use vercel dev with DATABASE_URL for local API.",
+              },
+            ],
+          };
+        }
       },
     });
 
@@ -190,10 +229,10 @@ export function useWebMCP(
         }
         const lines = currentCart.map(
           (i) =>
-            `• ${i.quantity}x ${i.product.name} — $${(i.product.price * i.quantity).toFixed(2)}`,
+            `• ${i.quantity}x ${i.product.name} — ${formatInr(i.product.price * i.quantity)}`,
         );
         const total = currentCart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-        lines.push(`\nTotal: $${total.toFixed(2)}`);
+        lines.push(`\nTotal: ${formatInr(total)}`);
         return { content: [{ type: "text", text: lines.join("\n") }] };
       },
     });
@@ -201,7 +240,7 @@ export function useWebMCP(
     register({
       name: "get_products",
       description:
-        "List all products with IDs, names, and prices. Use these IDs with other tools.",
+        "List all products with IDs, names, and prices in INR. Use these IDs with other tools.",
       inputSchema: {
         type: "object",
         properties: {
@@ -217,7 +256,7 @@ export function useWebMCP(
         const category = args.category as string | undefined;
         const filtered = category ? list.filter((p) => p.category === category) : list;
         const lines = filtered.map(
-          (p) => `• [${p.id}] ${p.name} — $${p.price.toFixed(2)} (${p.category})`,
+          (p) => `• [${p.id}] ${p.name} — ${formatInr(p.price)} (${p.category})`,
         );
         return { content: [{ type: "text", text: lines.join("\n") }] };
       },
@@ -231,7 +270,7 @@ export function useWebMCP(
       execute: () => {
         const list = productsRef.current ?? [];
         const lines = list.map(
-          (p) => `• [${p.id}] ${p.name} — $${p.price.toFixed(2)} (${p.category})`,
+          (p) => `• [${p.id}] ${p.name} — ${formatInr(p.price)} (${p.category})`,
         );
         return { content: [{ type: "text", text: lines.join("\n") }] };
       },
@@ -268,7 +307,7 @@ export function useWebMCP(
             {
               type: "text",
               text:
-                `Quick Buy opened for "${product.name}" ($${product.price.toFixed(2)}). ` +
+                `Quick Buy opened for "${product.name}" (${formatInr(product.price)}). ` +
                 `Use complete_quick_buy to fill the form.`,
             },
           ],

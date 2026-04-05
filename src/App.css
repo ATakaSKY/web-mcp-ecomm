@@ -78,6 +78,16 @@
   font-size: 0.95rem;
 }
 
+.order-id {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.order-id code {
+  font-size: 0.85rem;
+}
+
 /* ────── WebMCP Banner ────── */
 .webmcp-banner {
   display: flex;
