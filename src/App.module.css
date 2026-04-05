@@ -1,0 +1,31 @@
+.mainContent {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 4rem;
+}
+
+.webmcpBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--green-dim);
+  border: 1px solid rgba(76, 175, 132, 0.2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1.1rem;
+  margin-bottom: 2rem;
+  font-size: 0.85rem;
+  color: var(--green);
+  line-height: 1.5;
+}
+
+.webmcpBanner em {
+  color: var(--banner-em);
+  font-style: normal;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .mainContent {
+    padding: 1rem;
+  }
+}

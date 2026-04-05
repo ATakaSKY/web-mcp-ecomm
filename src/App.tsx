@@ -7,7 +7,8 @@ import { WishlistView } from "./components/WishlistView";
 import { CheckoutView } from "./components/CheckoutView";
 import { DeclarativeView } from "./components/DeclarativeView";
 import { QuickBuyModal } from "./components/QuickBuyModal";
-import "./App.css";
+import { BannerDot } from "./components/BannerDot";
+import styles from "./App.module.css";
 
 function ShopApp() {
   const { state, dispatch } = useStore();
@@ -17,9 +18,9 @@ function ShopApp() {
   return (
     <>
       <Header />
-      <main className="main-content">
-        <div className="webmcp-banner">
-          <span className="banner-dot" />
+      <main className={styles.mainContent}>
+        <div className={styles.webmcpBanner}>
+          <BannerDot />
           <span>
             <strong>WebMCP Enabled</strong> — imperative tools (registered when the catalog loads) +{" "}
             declarative form tools via <code>navigator.modelContext</code>.{" "}

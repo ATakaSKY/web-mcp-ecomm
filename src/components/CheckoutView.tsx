@@ -1,5 +1,8 @@
 import { useEffect } from "react";
 import { useStore } from "../store/StoreContext";
+import btn from "./buttons.module.css";
+import styles from "./CheckoutView.module.css";
+import views from "./views.module.css";
 
 export function CheckoutView() {
   const { state, dispatch } = useStore();
@@ -15,16 +18,16 @@ export function CheckoutView() {
   }
 
   return (
-    <section className="view-section empty-state checkout-success">
-      <div className="success-icon">✓</div>
-      <h2 className="view-title">Order Placed!</h2>
+    <section className={`${views.viewSection} ${views.emptyState} ${styles.checkoutSuccess}`}>
+      <div className={styles.successIcon}>✓</div>
+      <h2 className={views.viewTitle}>Order Placed!</h2>
       <p>Thank you for your purchase. Your order has been confirmed.</p>
       {state.lastOrderId && (
-        <p className="order-id">
+        <p className={styles.orderId}>
           Order ID: <code>{state.lastOrderId}</code>
         </p>
       )}
-      <button className="btn-primary" onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
+      <button type="button" className={btn.btnPrimary} onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
         Continue Shopping
       </button>
     </section>

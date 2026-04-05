@@ -1,33 +1,52 @@
+import { useThemePreference } from "../hooks/useThemePreference";
 import { useStore } from "../store/StoreContext";
+import type { ThemePreference } from "../lib/themePreference";
 import type { View } from "../types";
+import styles from "./Header.module.css";
 
 export function Header() {
   const { state, dispatch, cartCount } = useStore();
+  const { preference, setPreference } = useThemePreference();
 
   const nav = (view: View) => () => dispatch({ type: "SET_VIEW", view });
-  const active = (v: View) => (state.view === v ? "nav-btn active" : "nav-btn");
+  const navBtn = (v: View) =>
+    state.view === v ? `${styles.navBtn} ${styles.navBtnActive}` : styles.navBtn;
 
   return (
-    <header className="app-header">
-      <button className="logo" onClick={nav("shop")}>
+    <header className={styles.appHeader}>
+      <button type="button" className={styles.logo} onClick={nav("shop")}>
         ⚡ WebMCP Shop
       </button>
       <nav>
-        <button className={active("shop")} onClick={nav("shop")}>
+        <button type="button" className={navBtn("shop")} onClick={nav("shop")}>
           Products
         </button>
-        <button className={active("wishlist")} onClick={nav("wishlist")}>
+        <button type="button" className={navBtn("wishlist")} onClick={nav("wishlist")}>
           ♥ Wishlist
-          {state.wishlist.length > 0 && <span className="badge">{state.wishlist.length}</span>}
+          {state.wishlist.length > 0 && <span className={styles.badge}>{state.wishlist.length}</span>}
         </button>
-        <button className={active("cart")} onClick={nav("cart")}>
+        <button type="button" className={navBtn("cart")} onClick={nav("cart")}>
           🛒 Cart
-          {cartCount > 0 && <span className="badge">{cartCount}</span>}
+          {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
         </button>
-        <span className="nav-divider" />
-        <button className={active("declarative")} onClick={nav("declarative")}>
+        <span className={styles.navDivider} />
+        <button type="button" className={navBtn("declarative")} onClick={nav("declarative")}>
           📋 Declarative API
         </button>
+        <span className={styles.navDivider} />
+        <label className={styles.themeSelectLabel} htmlFor="header-theme-select">
+          <span className={styles.themeSelectSr}>Theme</span>
+          <select
+            id="header-theme-select"
+            className={styles.themeSelect}
+            value={preference}
+            onChange={(e) => setPreference(e.target.value as ThemePreference)}
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="system">System theme</option>
+          </select>
+        </label>
       </nav>
     </header>
   );

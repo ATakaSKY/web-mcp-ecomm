@@ -1,0 +1,24 @@
+.checkoutSuccess .successIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: 2rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  border: 2px solid var(--green);
+}
+
+.orderId {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.orderId code {
+  font-size: 0.85rem;
+}

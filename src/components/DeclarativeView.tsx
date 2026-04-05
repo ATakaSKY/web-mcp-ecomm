@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
+import btn from "./buttons.module.css";
+import decl from "./DeclarativeView.module.css";
+import forms from "./forms.module.css";
+import views from "./views.module.css";
 
 interface LogEntry {
   time: string;
@@ -57,17 +61,17 @@ export function DeclarativeView() {
 
   if (state.productsLoading || catalog.length === 0) {
     return (
-      <section className="view-section decl-view empty-state">
-        <h2 className="view-title">Declarative API — Live Examples</h2>
+      <section className={`${views.viewSection} ${views.emptyState}`}>
+        <h2 className={views.viewTitle}>Declarative API — Live Examples</h2>
         <p>Loading product catalog for form demos…</p>
       </section>
     );
   }
 
   return (
-    <section className="view-section decl-view">
-      <h2 className="view-title">Declarative API — Live Examples</h2>
-      <p className="decl-intro">
+    <section className={views.viewSection}>
+      <h2 className={views.viewTitle}>Declarative API — Live Examples</h2>
+      <p className={decl.intro}>
         The Declarative API lets you turn <strong>existing HTML forms</strong>{" "}
         into WebMCP tools by adding a few attributes —{" "}
         <strong>no JavaScript required</strong> for registration. Below are
@@ -76,19 +80,19 @@ export function DeclarativeView() {
         appear automatically.
       </p>
 
-      <div className="decl-grid">
+      <div className={decl.grid}>
         {/* ─── FORM 1: Quick Add (toolautosubmit) ─── */}
-        <div className="decl-card">
-          <div className="decl-card-header">
-            <span className="decl-badge auto">Auto-submit</span>
+        <div className={decl.card}>
+          <div className={decl.cardHeader}>
+            <span className={`${decl.badge} ${decl.badgeAuto}`}>Auto-submit</span>
             <h3>Quick Add to Cart</h3>
           </div>
-          <div className="decl-annotation">
-            <div className="annotation-title">Attributes used</div>
-            <code className="annotation-code">
+          <div className={decl.annotation}>
+            <div className={decl.annotationTitle}>Attributes used</div>
+            <code className={decl.annotationCode}>
               {`<form\n  toolname="quick_add_to_cart"\n  tooldescription="Quickly add a product to the cart by selecting\n    the product and quantity."\n  toolautosubmit\n>`}
             </code>
-            <ul className="annotation-notes">
+            <ul className={decl.annotationNotes}>
               <li>
                 <code>toolname</code> — registers this form as a tool the agent
                 can call
@@ -140,9 +144,9 @@ export function DeclarativeView() {
                 );
               }
             }}
-            className="decl-form"
+            className={forms.declForm}
           >
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="qa-product">Product</label>
               <select
                 name="product"
@@ -157,7 +161,7 @@ export function DeclarativeView() {
                 ))}
               </select>
             </div>
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="qa-qty">Quantity</label>
               <input
                 type="number"
@@ -169,24 +173,24 @@ export function DeclarativeView() {
                 toolparamdescription="Number of items to add (1–10)"
               />
             </div>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className={btn.btnPrimary}>
               Add to Cart
             </button>
           </form>
         </div>
 
         {/* ─── FORM 2: Feedback (agentInvoked + respondWith) ─── */}
-        <div className="decl-card">
-          <div className="decl-card-header">
-            <span className="decl-badge manual">Manual submit</span>
+        <div className={decl.card}>
+          <div className={decl.cardHeader}>
+            <span className={`${decl.badge} ${decl.badgeManual}`}>Manual submit</span>
             <h3>Submit Product Feedback</h3>
           </div>
-          <div className="decl-annotation">
-            <div className="annotation-title">Attributes used</div>
-            <code className="annotation-code">
+          <div className={decl.annotation}>
+            <div className={decl.annotationTitle}>Attributes used</div>
+            <code className={decl.annotationCode}>
               {`<form\n  toolname="submit_feedback"\n  tooldescription="Submit feedback or a review\n    for a product."\n>`}
             </code>
-            <ul className="annotation-notes">
+            <ul className={decl.annotationNotes}>
               <li>
                 No <code>toolautosubmit</code> — agent fills the form, but the{" "}
                 <strong>user must click Submit</strong>
@@ -241,9 +245,9 @@ export function DeclarativeView() {
 
               e.currentTarget.reset();
             }}
-            className="decl-form"
+            className={forms.declForm}
           >
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="fb-product">Product</label>
               <select name="product" id="fb-product" required>
                 {catalog.map((p) => (
@@ -253,7 +257,7 @@ export function DeclarativeView() {
                 ))}
               </select>
             </div>
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="fb-rating">Rating</label>
               <select
                 name="rating"
@@ -268,7 +272,7 @@ export function DeclarativeView() {
                 <option value="1">1 — Terrible</option>
               </select>
             </div>
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="fb-comment">Comment</label>
               <textarea
                 name="comment"
@@ -278,29 +282,29 @@ export function DeclarativeView() {
                 toolparamdescription="Free-text review or feedback comment"
               />
             </div>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className={btn.btnPrimary}>
               Submit Feedback
             </button>
           </form>
           {feedbackResult && (
-            <div className="decl-result">
+            <div className={decl.result}>
               <strong>Last submission:</strong> {feedbackResult}
             </div>
           )}
         </div>
 
         {/* ─── FORM 3: Gift Card (radio, toolparamdescription) ─── */}
-        <div className="decl-card">
-          <div className="decl-card-header">
-            <span className="decl-badge auto">Auto-submit</span>
+        <div className={decl.card}>
+          <div className={decl.cardHeader}>
+            <span className={`${decl.badge} ${decl.badgeAuto}`}>Auto-submit</span>
             <h3>Purchase Gift Card</h3>
           </div>
-          <div className="decl-annotation">
-            <div className="annotation-title">Attributes used</div>
-            <code className="annotation-code">
+          <div className={decl.annotation}>
+            <div className={decl.annotationTitle}>Attributes used</div>
+            <code className={decl.annotationCode}>
               {`<input type="radio" name="amount"\n  value="500"\n  toolparamdescription="Gift card amount\n    in INR. Choose 500, 1000, or 2000." />\n\n<!-- toolparamdescription on first radio\n     applies to the entire group -->`}
             </code>
-            <ul className="annotation-notes">
+            <ul className={decl.annotationNotes}>
               <li>
                 <code>toolparamdescription</code> on the{" "}
                 <strong>first radio</strong> in a group applies to the whole
@@ -355,9 +359,9 @@ export function DeclarativeView() {
                 );
               }
             }}
-            className="decl-form"
+            className={forms.declForm}
           >
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="gc-email">Recipient email</label>
               <input
                 type="email"
@@ -367,10 +371,10 @@ export function DeclarativeView() {
                 placeholder="friend@example.com"
               />
             </div>
-            <fieldset className="form-fieldset">
+            <fieldset className={forms.formFieldset}>
               <legend>Amount</legend>
-              <div className="radio-group">
-                <label className="radio-label">
+              <div className={forms.radioGroup}>
+                <label className={forms.radioLabel}>
                   <input
                     type="radio"
                     name="amount"
@@ -380,17 +384,17 @@ export function DeclarativeView() {
                   />
                   {formatInr(500)}
                 </label>
-                <label className="radio-label">
+                <label className={forms.radioLabel}>
                   <input type="radio" name="amount" value="1000" />
                   {formatInr(1000)}
                 </label>
-                <label className="radio-label">
+                <label className={forms.radioLabel}>
                   <input type="radio" name="amount" value="2000" />
                   {formatInr(2000)}
                 </label>
               </div>
             </fieldset>
-            <div className="form-field">
+            <div className={forms.formField}>
               <label htmlFor="gc-msg">Personal message (optional)</label>
               <input
                 type="text"
@@ -400,7 +404,7 @@ export function DeclarativeView() {
                 toolparamdescription="Optional personal message to include with the gift card"
               />
             </div>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className={btn.btnPrimary}>
               Send Gift Card
             </button>
           </form>
@@ -408,50 +412,50 @@ export function DeclarativeView() {
       </div>
 
       {/* ─── CSS Pseudo-Classes Reference ─── */}
-      <div className="decl-css-section">
+      <div className={decl.cssSection}>
         <h3>CSS Pseudo-Classes for Agent Interactions</h3>
-        <p className="decl-css-intro">
+        <p className={decl.cssIntro}>
           When an agent activates a declarative tool, Chrome applies these
           pseudo-classes so you can visually indicate agent activity:
         </p>
-        <div className="decl-css-grid">
-          <div className="decl-css-card">
+        <div className={decl.cssGrid}>
+          <div className={decl.cssCard}>
             <code>form:tool-form-active</code>
             <p>Applied to the form while the agent is interacting with it.</p>
-            <pre className="decl-css-code">{`form:tool-form-active {\n  outline: light-dark(blue, cyan) dashed 1px;\n  outline-offset: -1px;\n}`}</pre>
+            <pre className={decl.cssCode}>{`form:tool-form-active {\n  outline: light-dark(blue, cyan) dashed 1px;\n  outline-offset: -1px;\n}`}</pre>
           </div>
-          <div className="decl-css-card">
+          <div className={decl.cssCard}>
             <code>[type="submit"]:tool-submit-active</code>
             <p>Applied to the submit button during agent interaction.</p>
-            <pre className="decl-css-code">{`input:tool-submit-active {\n  outline: light-dark(red, pink) dashed 1px;\n  outline-offset: -1px;\n}`}</pre>
+            <pre className={decl.cssCode}>{`input:tool-submit-active {\n  outline: light-dark(red, pink) dashed 1px;\n  outline-offset: -1px;\n}`}</pre>
           </div>
         </div>
       </div>
 
       {/* ─── Event Log ─── */}
-      <div className="decl-log-section">
-        <div className="decl-log-header">
+      <div className={decl.logSection}>
+        <div className={decl.logHeader}>
           <h3>Event Log</h3>
-          <button className="btn-clear" onClick={() => setLogs([])}>
+          <button type="button" className={decl.btnClear} onClick={() => setLogs([])}>
             Clear
           </button>
         </div>
-        <div className="decl-log">
+        <div className={decl.log}>
           {logs.length === 0 && (
-            <div className="log-empty">
+            <div className={decl.logEmpty}>
               No events yet. Submit a form or let an agent interact with the
               tools above.
             </div>
           )}
           {logs.map((log, i) => (
-            <div key={i} className="log-entry">
-              <span className="log-time">{log.time}</span>
+            <div key={i} className={decl.logEntry}>
+              <span className={decl.logTime}>{log.time}</span>
               <span
-                className={`log-event ${log.event.includes("cancel") ? "cancel" : ""}`}
+                className={`${decl.logEvent}${log.event.includes("cancel") ? ` ${decl.logEventCancel}` : ""}`}
               >
                 {log.event}
               </span>
-              <span className="log-detail">{log.detail}</span>
+              <span className={decl.logDetail}>{log.detail}</span>
             </div>
           ))}
           <div ref={logEndRef} />
@@ -459,10 +463,10 @@ export function DeclarativeView() {
       </div>
 
       {/* ─── Imperative vs Declarative comparison ─── */}
-      <div className="decl-comparison">
+      <div className={decl.comparison}>
         <h3>When to use which?</h3>
-        <div className="comparison-grid">
-          <div className="comparison-col imperative">
+        <div className={decl.comparisonGrid}>
+          <div className={`${decl.comparisonCol} ${decl.comparisonImperative}`}>
             <h4>Imperative API</h4>
             <ul>
               <li>Full control over execute logic</li>
@@ -472,7 +476,7 @@ export function DeclarativeView() {
               <li>Dynamic tool registration</li>
             </ul>
           </div>
-          <div className="comparison-col declarative">
+          <div className={`${decl.comparisonCol} ${decl.comparisonDeclarative}`}>
             <h4>Declarative API</h4>
             <ul>
               <li>Zero JavaScript for registration</li>

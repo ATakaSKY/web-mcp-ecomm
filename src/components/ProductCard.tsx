@@ -1,6 +1,8 @@
 import type { Product } from "../types";
 import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
+import btn from "./buttons.module.css";
+import styles from "./ProductCard.module.css";
 
 export function ProductCard({ product }: { product: Product }) {
   const { state, dispatch } = useStore();
@@ -9,30 +11,33 @@ export function ProductCard({ product }: { product: Product }) {
   const wishlisted = state.wishlist.includes(product.id);
 
   return (
-    <div className="product-card">
-      <img src={product.image} alt={product.name} className="product-img" />
-      <div className="product-body">
-        <span className="product-category">{product.category}</span>
-        <h3 className="product-name">{product.name}</h3>
-        <p className="product-desc">{product.description}</p>
-        <div className="product-footer">
-          <span className="product-price">{formatInr(product.price)}</span>
-          <div className="product-actions">
+    <div className={styles.productCard}>
+      <img src={product.image} alt={product.name} className={styles.productImg} />
+      <div className={styles.productBody}>
+        <span className={styles.productCategory}>{product.category}</span>
+        <h3 className={styles.productName}>{product.name}</h3>
+        <p className={styles.productDesc}>{product.description}</p>
+        <div className={styles.productFooter}>
+          <span className={styles.productPrice}>{formatInr(product.price)}</span>
+          <div className={styles.productActions}>
             <button
-              className={`btn-icon ${wishlisted ? "wishlisted" : ""}`}
+              type="button"
+              className={`${btn.btnIcon}${wishlisted ? ` ${btn.wishlisted}` : ""}`}
               onClick={() => dispatch({ type: "TOGGLE_WISHLIST", productId: product.id })}
               title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
               {wishlisted ? "♥" : "♡"}
             </button>
             <button
-              className="btn-secondary btn-sm"
+              type="button"
+              className={`${btn.btnSecondary} ${btn.btnSm}`}
               onClick={() => dispatch({ type: "OPEN_QUICK_BUY", productId: product.id })}
             >
               Quick Buy
             </button>
             <button
-              className={`btn-primary ${inCart ? "in-cart" : ""}`}
+              type="button"
+              className={`${btn.btnPrimary}${inCart ? ` ${btn.inCart}` : ""}`}
               onClick={() => dispatch({ type: "ADD_TO_CART", productId: product.id })}
             >
               {inCart ? "✓ In Cart" : "Add to Cart"}

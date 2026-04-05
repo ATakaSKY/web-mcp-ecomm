@@ -1,0 +1,26 @@
+.viewTitle {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.viewSection {
+  animation: app-fade-in 0.2s ease;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.emptyState p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.errorText {
+  color: var(--danger, #c62828);
+  font-size: 0.95rem;
+}

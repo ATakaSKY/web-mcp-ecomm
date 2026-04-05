@@ -1,0 +1,348 @@
+.intro {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 2rem;
+  max-width: 780px;
+}
+
+.intro strong {
+  color: var(--text);
+}
+
+.intro em {
+  color: var(--green);
+  font-style: normal;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.cardHeader h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.badgeAuto {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(76, 175, 132, 0.25);
+}
+
+.badgeManual {
+  background: rgba(240, 160, 80, 0.1);
+  color: var(--orange);
+  border: 1px solid rgba(240, 160, 80, 0.25);
+}
+
+.annotation {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.annotationTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.annotationCode {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--accent);
+  white-space: pre;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+}
+
+.annotationNotes {
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.annotationNotes li {
+  padding-left: 0.8rem;
+  position: relative;
+}
+
+.annotationNotes li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+.annotationNotes code {
+  font-size: 0.78rem;
+  color: var(--green);
+  padding: 0.1rem 0.3rem;
+}
+
+.result {
+  background: var(--accent-dim);
+  border: 1px solid rgba(108, 138, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.cssSection {
+  margin-bottom: 2.5rem;
+}
+
+.cssSection h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.cssIntro {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.cssGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cssCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+}
+
+.cssCard > code {
+  font-size: 0.88rem;
+  color: var(--decl-code-accent);
+  background: var(--decl-code-accent-bg);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.cssCard > p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0.45rem 0 0.65rem;
+}
+
+.cssCode {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre;
+  margin: 0;
+  overflow-x: auto;
+}
+
+.logSection {
+  margin-bottom: 2.5rem;
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.logHeader h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.btnClear {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnClear:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.log {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.logEmpty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.85rem;
+}
+
+.logEntry {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+}
+
+.logEntry:last-of-type {
+  border-bottom: none;
+}
+
+.logTime {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.logEvent {
+  color: var(--green);
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.logEventCancel {
+  color: var(--red);
+}
+
+.logDetail {
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.82rem;
+}
+
+.comparison {
+  margin-bottom: 2rem;
+}
+
+.comparison h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.comparisonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.comparisonCol {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+}
+
+.comparisonCol h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.comparisonImperative h4 {
+  color: var(--accent);
+}
+
+.comparisonDeclarative h4 {
+  color: var(--green);
+}
+
+.comparisonCol ul {
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.comparisonCol ul li {
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.comparisonImperative ul li::before {
+  content: "⚡";
+  position: absolute;
+  left: 0;
+  font-size: 0.75rem;
+}
+
+.comparisonDeclarative ul li::before {
+  content: "📋";
+  position: absolute;
+  left: 0;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cssGrid,
+  .comparisonGrid {
+    grid-template-columns: 1fr;
+  }
+}

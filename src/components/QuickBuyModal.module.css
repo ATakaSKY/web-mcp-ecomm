@@ -1,0 +1,161 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 2rem;
+  animation: app-fade-in-opacity 0.15s ease;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1.75rem;
+  animation: app-modal-slide-in 0.2s ease;
+  box-shadow: var(--modal-shadow);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.modalHeader h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.modalSubtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.modalClose:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.modalWebmcpNote {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: var(--green-dim);
+  border: 1px solid rgba(76, 175, 132, 0.2);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--green);
+  line-height: 1.5;
+}
+
+.modalWebmcpNote code {
+  color: var(--modal-note-code);
+  font-size: 0.76rem;
+}
+
+.modalProductPreview {
+  display: flex;
+  gap: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.modalProductPreview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.modalProductPreview h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.previewDesc {
+  font-size: 0.78rem;
+  margin-bottom: 0.35rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.previewPrice {
+  font-size: 1rem;
+}
+
+.modalForm input,
+.modalForm select {
+  background: var(--bg);
+}
+
+.modalFormFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.modalSuccess {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.modalSuccessIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border: 2px solid var(--green);
+}
+
+.modalSuccess h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.modalSuccess p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.92rem;
+}

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
+import { BannerDot } from "./BannerDot";
+import btn from "./buttons.module.css";
+import forms from "./forms.module.css";
+import pc from "./ProductCard.module.css";
+import styles from "./QuickBuyModal.module.css";
 
 const SHIPPING_STANDARD_INR = 499;
 const SHIPPING_EXPRESS_INR = 1299;
@@ -52,14 +57,14 @@ export function QuickBuyModal() {
 
   if (orderSuccess) {
     return (
-      <div className="modal-backdrop" ref={backdropRef} onClick={onBackdropClick}>
-        <div className="modal modal-success">
-          <div className="modal-success-icon">✓</div>
+      <div className={styles.backdrop} ref={backdropRef} onClick={onBackdropClick}>
+        <div className={`${styles.modal} ${styles.modalSuccess}`}>
+          <div className={styles.modalSuccessIcon}>✓</div>
           <h2>Order Confirmed!</h2>
           <p>
             Your Quick Buy order for <strong>{product.name}</strong> has been placed.
           </p>
-          <button className="btn-primary" onClick={close}>
+          <button type="button" className={btn.btnPrimary} onClick={close}>
             Done
           </button>
         </div>
@@ -68,35 +73,37 @@ export function QuickBuyModal() {
   }
 
   return (
-    <div className="modal-backdrop" ref={backdropRef} onClick={onBackdropClick}>
-      <div className="modal">
-        <div className="modal-header">
+    <div className={styles.backdrop} ref={backdropRef} onClick={onBackdropClick}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
           <div>
             <h2>Quick Buy</h2>
-            <p className="modal-subtitle">
+            <p className={styles.modalSubtitle}>
               Complete your purchase of <strong>{product.name}</strong>
             </p>
           </div>
-          <button className="modal-close" onClick={close}>✕</button>
+          <button type="button" className={styles.modalClose} onClick={close}>
+            ✕
+          </button>
         </div>
 
         {/* WebMCP annotation callout */}
-        <div className="modal-webmcp-note">
-          <span className="banner-dot" />
+        <div className={styles.modalWebmcpNote}>
+          <BannerDot />
           <span>
-            This form is registered as <code>complete_quick_buy</code> via the
-            Declarative API. It <strong>only exists while this modal is open</strong> —
-            Chrome auto-registers/unregisters it with the DOM lifecycle.
+            This form is registered as <code>complete_quick_buy</code> via the Declarative API. It{" "}
+            <strong>only exists while this modal is open</strong> — Chrome auto-registers/unregisters it with the
+            DOM lifecycle.
           </span>
         </div>
 
         {/* Product preview */}
-        <div className="modal-product-preview">
+        <div className={styles.modalProductPreview}>
           <img src={product.image} alt={product.name} />
           <div>
             <h3>{product.name}</h3>
-            <p className="product-desc">{product.description}</p>
-            <span className="product-price">{formatInr(product.price)}</span>
+            <p className={`${pc.productDesc} ${styles.previewDesc}`}>{product.description}</p>
+            <span className={`${pc.productPrice} ${styles.previewPrice}`}>{formatInr(product.price)}</span>
           </div>
         </div>
 
@@ -149,18 +156,12 @@ export function QuickBuyModal() {
             console.log("[QuickBuy] Order placed:", orderData);
 
             if (se.agentInvoked && se.respondWith) {
-              // respondWith expects a Promise per the WebMCP spec.
-              // We must NOT unmount the form until the promise resolves,
-              // otherwise Chrome's renderer crashes since it's still
-              // reading the form element during respondWith processing.
               const resultPromise = Promise.resolve({
                 status: "success",
                 order: { ...orderData, total: total.toFixed(2) },
                 message: `Order confirmed! ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: ${formatInr(total)}.`,
               });
               se.respondWith(resultPromise);
-              // Delay the UI transition so the form stays in the DOM
-              // while Chrome processes the respondWith promise.
               resultPromise.then(() => {
                 setTimeout(() => setOrderSuccess(true), 100);
               });
@@ -169,11 +170,11 @@ export function QuickBuyModal() {
 
             setOrderSuccess(true);
           }}
-          className="modal-form"
+          className={forms.modalForm}
         >
           {/* Quantity */}
-          <div className="form-row">
-            <div className="form-field">
+          <div className={forms.formRow}>
+            <div className={forms.formField}>
               <label htmlFor="qb-qty">Quantity</label>
               <input
                 type="number"
@@ -189,10 +190,10 @@ export function QuickBuyModal() {
           </div>
 
           {/* Shipping address */}
-          <fieldset className="form-fieldset">
+          <fieldset className={forms.formFieldset}>
             <legend>Shipping Address</legend>
-            <div className="form-row">
-              <div className="form-field grow">
+            <div className={forms.formRow}>
+              <div className={`${forms.formField} ${forms.grow}`}>
                 <label htmlFor="qb-name">Full name</label>
                 <input
                   type="text"
@@ -204,8 +205,8 @@ export function QuickBuyModal() {
                 />
               </div>
             </div>
-            <div className="form-row">
-              <div className="form-field grow">
+            <div className={forms.formRow}>
+              <div className={`${forms.formField} ${forms.grow}`}>
                 <label htmlFor="qb-addr">Street address</label>
                 <input
                   type="text"
@@ -217,18 +218,12 @@ export function QuickBuyModal() {
                 />
               </div>
             </div>
-            <div className="form-row">
-              <div className="form-field grow">
+            <div className={forms.formRow}>
+              <div className={`${forms.formField} ${forms.grow}`}>
                 <label htmlFor="qb-city">City</label>
-                <input
-                  type="text"
-                  name="city"
-                  id="qb-city"
-                  required
-                  placeholder="Mumbai"
-                />
+                <input type="text" name="city" id="qb-city" required placeholder="Mumbai" />
               </div>
-              <div className="form-field">
+              <div className={forms.formField}>
                 <label htmlFor="qb-zip">PIN code</label>
                 <input
                   type="text"
@@ -243,10 +238,10 @@ export function QuickBuyModal() {
           </fieldset>
 
           {/* Shipping method — radio group */}
-          <fieldset className="form-fieldset">
+          <fieldset className={forms.formFieldset}>
             <legend>Shipping Method</legend>
-            <div className="radio-group vertical">
-              <label className="radio-label">
+            <div className={`${forms.radioGroup} ${forms.radioGroupVertical}`}>
+              <label className={forms.radioLabel}>
                 <input
                   type="radio"
                   name="shipping_method"
@@ -256,34 +251,34 @@ export function QuickBuyModal() {
                 />
                 <div>
                   <strong>Standard</strong>
-                  <span className="radio-detail">
+                  <span className={forms.radioDetail}>
                     5–7 business days — {formatInr(SHIPPING_STANDARD_INR)}
                   </span>
                 </div>
               </label>
-              <label className="radio-label">
+              <label className={forms.radioLabel}>
                 <input type="radio" name="shipping_method" value="express" />
                 <div>
                   <strong>Express</strong>
-                  <span className="radio-detail">
+                  <span className={forms.radioDetail}>
                     1–2 business days — {formatInr(SHIPPING_EXPRESS_INR)}
                   </span>
                 </div>
               </label>
-              <label className="radio-label">
+              <label className={forms.radioLabel}>
                 <input type="radio" name="shipping_method" value="pickup" />
                 <div>
                   <strong>Store Pickup</strong>
-                  <span className="radio-detail">Ready in 2 hours — Free</span>
+                  <span className={forms.radioDetail}>Ready in 2 hours — Free</span>
                 </div>
               </label>
             </div>
           </fieldset>
 
           {/* Gift wrap — checkbox */}
-          <fieldset className="form-fieldset">
+          <fieldset className={forms.formFieldset}>
             <legend>Gift Options</legend>
-            <label className="checkbox-label">
+            <label className={forms.checkboxLabel}>
               <input
                 type="checkbox"
                 name="gift_wrap"
@@ -291,7 +286,7 @@ export function QuickBuyModal() {
               />
               <span>Add gift wrapping (+{formatInr(GIFT_WRAP_INR)})</span>
             </label>
-            <div className="form-field" style={{ marginTop: "0.5rem" }}>
+            <div className={forms.formField} style={{ marginTop: "0.5rem" }}>
               <label htmlFor="qb-gift-msg">Gift message (optional)</label>
               <input
                 type="text"
@@ -304,7 +299,7 @@ export function QuickBuyModal() {
           </fieldset>
 
           {/* Payment method */}
-          <div className="form-field">
+          <div className={forms.formField}>
             <label htmlFor="qb-payment">Payment method</label>
             <select
               name="payment_method"
@@ -321,11 +316,11 @@ export function QuickBuyModal() {
           </div>
 
           {/* Submit */}
-          <div className="modal-form-footer">
-            <button type="button" className="btn-secondary" onClick={close}>
+          <div className={styles.modalFormFooter}>
+            <button type="button" className={btn.btnSecondary} onClick={close}>
               Cancel
             </button>
-            <button type="submit" className="btn-primary btn-checkout">
+            <button type="submit" className={`${btn.btnPrimary} ${btn.btnCheckout}`}>
               Confirm Purchase
             </button>
           </div>

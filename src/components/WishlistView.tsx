@@ -1,5 +1,8 @@
 import { useStore } from "../store/StoreContext";
 import { ProductCard } from "./ProductCard";
+import btn from "./buttons.module.css";
+import grid from "./ProductGrid.module.css";
+import views from "./views.module.css";
 
 export function WishlistView() {
   const { state, dispatch } = useStore();
@@ -8,8 +11,8 @@ export function WishlistView() {
 
   if (state.productsLoading) {
     return (
-      <section className="view-section empty-state">
-        <h2 className="view-title">Your Wishlist</h2>
+      <section className={`${views.viewSection} ${views.emptyState}`}>
+        <h2 className={views.viewTitle}>Your Wishlist</h2>
         <p>Loading…</p>
       </section>
     );
@@ -17,10 +20,10 @@ export function WishlistView() {
 
   if (wishlisted.length === 0) {
     return (
-      <section className="view-section empty-state">
-        <h2 className="view-title">Your Wishlist</h2>
+      <section className={`${views.viewSection} ${views.emptyState}`}>
+        <h2 className={views.viewTitle}>Your Wishlist</h2>
         <p>No items in your wishlist yet.</p>
-        <button className="btn-primary" onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
+        <button type="button" className={btn.btnPrimary} onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
           Browse Products
         </button>
       </section>
@@ -28,9 +31,9 @@ export function WishlistView() {
   }
 
   return (
-    <section className="view-section">
-      <h2 className="view-title">Your Wishlist</h2>
-      <div className="product-grid">
+    <section className={views.viewSection}>
+      <h2 className={views.viewTitle}>Your Wishlist</h2>
+      <div className={grid.productGrid}>
         {wishlisted.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}

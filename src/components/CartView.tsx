@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useStore } from "../store/StoreContext";
 import { getApiBase } from "../lib/apiBase";
 import { formatInr } from "../lib/formatPrice";
+import btn from "./buttons.module.css";
+import styles from "./CartView.module.css";
+import views from "./views.module.css";
 
 export function CartView() {
   const { state, dispatch, cartTotal } = useStore();
@@ -10,10 +13,10 @@ export function CartView() {
 
   if (state.cart.length === 0) {
     return (
-      <section className="view-section empty-state">
-        <h2 className="view-title">Your Cart</h2>
+      <section className={`${views.viewSection} ${views.emptyState}`}>
+        <h2 className={views.viewTitle}>Your Cart</h2>
         <p>Your cart is empty. Start shopping!</p>
-        <button className="btn-primary" onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
+        <button type="button" className={btn.btnPrimary} onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
           Browse Products
         </button>
       </section>
@@ -52,20 +55,21 @@ export function CartView() {
   }
 
   return (
-    <section className="view-section">
-      <h2 className="view-title">Your Cart</h2>
-      {err && <p className="error-text">{err}</p>}
-      <div className="cart-list">
+    <section className={views.viewSection}>
+      <h2 className={views.viewTitle}>Your Cart</h2>
+      {err && <p className={views.errorText}>{err}</p>}
+      <div className={styles.cartList}>
         {state.cart.map((item) => (
-          <div key={item.product.id} className="cart-item">
-            <img src={item.product.image} alt={item.product.name} className="cart-item-img" />
-            <div className="cart-item-info">
+          <div key={item.product.id} className={styles.cartItem}>
+            <img src={item.product.image} alt={item.product.name} className={styles.cartItemImg} />
+            <div className={styles.cartItemInfo}>
               <h4>{item.product.name}</h4>
-              <p className="cart-item-price">{formatInr(item.product.price)}</p>
+              <p className={styles.cartItemPrice}>{formatInr(item.product.price)}</p>
             </div>
-            <div className="cart-item-controls">
+            <div className={styles.cartItemControls}>
               <button
-                className="qty-btn"
+                type="button"
+                className={styles.qtyBtn}
                 onClick={() =>
                   dispatch({
                     type: "UPDATE_QUANTITY",
@@ -76,9 +80,10 @@ export function CartView() {
               >
                 −
               </button>
-              <span className="qty-value">{item.quantity}</span>
+              <span className={styles.qtyValue}>{item.quantity}</span>
               <button
-                className="qty-btn"
+                type="button"
+                className={styles.qtyBtn}
                 onClick={() =>
                   dispatch({
                     type: "UPDATE_QUANTITY",
@@ -90,11 +95,12 @@ export function CartView() {
                 +
               </button>
             </div>
-            <span className="cart-item-subtotal">
+            <span className={styles.cartItemSubtotal}>
               {formatInr(item.product.price * item.quantity)}
             </span>
             <button
-              className="btn-icon remove"
+              type="button"
+              className={`${btn.btnIcon} ${btn.remove}`}
               onClick={() => dispatch({ type: "REMOVE_FROM_CART", productId: item.product.id })}
               title="Remove from cart"
             >
@@ -103,14 +109,14 @@ export function CartView() {
           </div>
         ))}
       </div>
-      <div className="cart-summary">
-        <div className="cart-total">
+      <div className={styles.cartSummary}>
+        <div className={styles.cartTotal}>
           <span>Total</span>
-          <span className="total-price">{formatInr(cartTotal)}</span>
+          <span className={styles.totalPrice}>{formatInr(cartTotal)}</span>
         </div>
         <button
-          className="btn-primary btn-checkout"
           type="button"
+          className={`${btn.btnPrimary} ${btn.btnCheckout}`}
           disabled={busy}
           onClick={() => void checkout()}
         >

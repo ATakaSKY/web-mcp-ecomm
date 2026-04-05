@@ -1,0 +1,83 @@
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.inCart {
+  background: var(--green);
+}
+
+.btnSecondary {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnSecondary:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.btnSm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.btnIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.btnIcon:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wishlisted {
+  color: var(--red);
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+
+.remove {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.remove:hover {
+  color: var(--red);
+}
+
+.btnCheckout {
+  padding: 0.65rem 2rem;
+  font-size: 0.95rem;
+}
