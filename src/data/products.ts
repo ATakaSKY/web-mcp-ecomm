@@ -1,4 +1,4 @@
-import type { Product } from "../types";
+import type { Product } from "../types/index.js";
 
 /** Demo catalog — prices are in Indian Rupees (INR). */
 export const products: Product[] = [

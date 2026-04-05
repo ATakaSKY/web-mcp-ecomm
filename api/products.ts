@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { eq } from "drizzle-orm";
-import { products as fallbackCatalog } from "../src/data/products";
-import { getDb } from "../db/client";
-import { products as productsTable } from "../db/schema";
+import { products as fallbackCatalog } from "../src/data/products.js";
+import { getDb } from "../db/client.js";
+import { products as productsTable } from "../db/schema.js";
 
 function toClientProduct(row: {
   id: string;

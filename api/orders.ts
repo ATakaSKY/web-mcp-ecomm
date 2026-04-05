@@ -1,12 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 import { inArray } from "drizzle-orm";
-import { getDb } from "../db/client";
+import { getDb } from "../db/client.js";
 import {
   orderLines as orderLinesTable,
   orders as ordersTable,
   products as productsTable,
-} from "../db/schema";
+} from "../db/schema.js";
+
+type ProductRow = typeof productsTable.$inferSelect;
 
 type LineInput = { productId: string; quantity: number };
 
@@ -69,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const byId = new Map(productRows.map((p) => [p.id, p]));
+  const byId = new Map<string, ProductRow>(productRows.map((p) => [p.id, p]));
   let totalPaise = 0;
   const resolved: { productId: string; quantity: number; unitPrice: number }[] = [];
 
@@ -89,7 +91,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await db.transaction(async (tx) => {
       await tx.insert(ordersTable).values({
         id: orderId,
-        status: "pending",
         totalPaise,
       });
       await tx.insert(orderLinesTable).values(

@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "../db/schema";
-import { products as seedCatalog } from "../src/data/products";
+import * as schema from "../db/schema.js";
+import { products as seedCatalog } from "../src/data/products.js";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
