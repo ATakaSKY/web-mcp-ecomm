@@ -1,0 +1,151 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--color-text, #0a0b0f) 35%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.panel {
+  width: min(100%, 420px);
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #0a0b0f);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px color-mix(in srgb, #000 25%, transparent);
+  padding: 1.25rem 1.5rem;
+}
+
+/* Panel uses light fallbacks while global `code` uses theme --surface-2 (dark in dark mode). */
+.panel code {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 0.85em;
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-text, #0a0b0f) 9%, var(--color-surface, #fff));
+  color: var(--color-text, #0a0b0f);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.close:hover {
+  opacity: 1;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-text, #0a0b0f) 18%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: inherit;
+}
+
+.tab[data-active="true"] {
+  background: color-mix(in srgb, var(--color-accent, #4f46e5) 15%, transparent);
+  border-color: var(--color-accent, #4f46e5);
+  font-weight: 600;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-text, #0a0b0f) 20%, transparent);
+  font-size: 1rem;
+  background: var(--color-surface, #fff);
+  color: inherit;
+}
+
+.submit {
+  margin-top: 0.25rem;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-accent, #4f46e5);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #c62828;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.signedIn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.signedInName {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.signOut {
+  padding: 0.55rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-text, #0a0b0f) 25%, transparent);
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  line-height: 1.4;
+}

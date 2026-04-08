@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { useThemePreference } from "../hooks/useThemePreference";
 import { useStore } from "../store/StoreContext";
+import { authClient } from "../lib/authClient";
 import type { ThemePreference } from "../lib/themePreference";
 import type { View } from "../types";
+import { AuthPanel } from "./AuthPanel";
 import styles from "./Header.module.css";
 
 export function Header() {
   const { state, dispatch, cartCount } = useStore();
   const { preference, setPreference } = useThemePreference();
+  const [authOpen, setAuthOpen] = useState(false);
+  const { data: session, isPending: sessionPending } = authClient.useSession();
 
   const nav = (view: View) => () => dispatch({ type: "SET_VIEW", view });
   const navBtn = (v: View) =>
@@ -29,6 +34,14 @@ export function Header() {
           🛒 Cart
           {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
         </button>
+        <button
+          type="button"
+          className={styles.navBtn}
+          onClick={() => setAuthOpen(true)}
+          title="Sign in or account"
+        >
+          {sessionPending ? "…" : session?.user ? `👤 ${session.user.name}` : "Sign in"}
+        </button>
         <span className={styles.navDivider} />
         <button type="button" className={navBtn("declarative")} onClick={nav("declarative")}>
           📋 Declarative API
@@ -48,6 +61,7 @@ export function Header() {
           </select>
         </label>
       </nav>
+      {authOpen && <AuthPanel onClose={() => setAuthOpen(false)} />}
     </header>
   );
 }

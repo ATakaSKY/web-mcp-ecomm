@@ -31,6 +31,7 @@ const GIFT_WRAP_INR = 399;
 async function postQuickBuyOrder(productId: string, quantity: number): Promise<string> {
   const res = await fetch(`${getApiBase()}/api/orders`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ lines: [{ productId, quantity }] }),
   });

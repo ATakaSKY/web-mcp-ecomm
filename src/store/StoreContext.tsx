@@ -7,7 +7,12 @@ import {
 } from "react";
 import type { CartItem, Product, StoreAction, View } from "../types";
 import { getApiBase } from "../lib/apiBase";
-import { hydrateCart, loadPersisted, sanitizeWishlist, savePersisted } from "../lib/persist";
+import {
+  hydrateCart,
+  loadPersisted,
+  sanitizeWishlist,
+  savePersisted,
+} from "../lib/persist";
 
 interface State {
   products: Product[] | null;
@@ -65,7 +70,9 @@ function reducer(state: State, action: StoreAction): State {
     case "ADD_TO_CART": {
       const product = findProduct(state, action.productId);
       if (!product) return state;
-      const existing = state.cart.find((i) => i.product.id === action.productId);
+      const existing = state.cart.find(
+        (i) => i.product.id === action.productId,
+      );
       if (existing) {
         return {
           ...state,
@@ -88,12 +95,17 @@ function reducer(state: State, action: StoreAction): State {
       };
     case "UPDATE_QUANTITY": {
       if (action.quantity <= 0) {
-        return { ...state, cart: state.cart.filter((i) => i.product.id !== action.productId) };
+        return {
+          ...state,
+          cart: state.cart.filter((i) => i.product.id !== action.productId),
+        };
       }
       return {
         ...state,
         cart: state.cart.map((i) =>
-          i.product.id === action.productId ? { ...i, quantity: action.quantity } : i,
+          i.product.id === action.productId
+            ? { ...i, quantity: action.quantity }
+            : i,
         ),
       };
     }
@@ -156,14 +168,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const base = getApiBase();
       try {
         const res = await fetch(`${base}/api/products`);
+
+        console.log("res", res);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: unknown = await res.json();
+        console.log("data", data);
         if (!Array.isArray(data)) throw new Error("Invalid catalog response");
-        if (!cancelled) dispatch({ type: "SET_PRODUCTS", products: data as Product[] });
+        if (!cancelled)
+          dispatch({ type: "SET_PRODUCTS", products: data as Product[] });
       } catch {
+        console.log("error");
         try {
           const mod = await import("../data/products");
-          if (!cancelled) dispatch({ type: "SET_PRODUCTS", products: mod.products });
+          if (!cancelled)
+            dispatch({ type: "SET_PRODUCTS", products: mod.products });
         } catch {
           if (!cancelled)
             dispatch({
@@ -189,7 +207,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, [state.products, state.cart, state.wishlist]);
 
-  const cartTotal = state.cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const cartTotal = state.cart.reduce(
+    (sum, i) => sum + i.product.price * i.quantity,
+    0,
+  );
   const cartCount = state.cart.reduce((sum, i) => sum + i.quantity, 0);
 
   return (

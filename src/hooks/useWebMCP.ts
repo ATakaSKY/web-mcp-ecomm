@@ -172,6 +172,7 @@ export function useWebMCP(
         try {
           const res = await fetch(`${getApiBase()}/api/orders`, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               lines: currentCart.map((i) => ({

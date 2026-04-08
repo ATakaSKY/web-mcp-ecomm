@@ -2,7 +2,7 @@
 
 A small **React + TypeScript + Vite** app that demonstrates **WebMCP**: registering tools on `navigator.modelContext` so AI agents can drive a shop UI (cart, wishlist, checkout, and declarative HTML forms).
 
-The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** — client persistence; **Phase 2** — **Postgres + Drizzle** and **`GET /api/products`**; **Phase 3** — **`POST /api/orders`** and checkout backed by the DB (no payment yet).
+The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** — client persistence; **Phase 2** — **Postgres + Drizzle** and **`GET /api/products`**; **Phase 3** — **`POST /api/orders`**; **Phase 4** — **Better Auth** (email/password, sessions in Postgres, `orders.user_id` when signed in).
 
 ---
 
@@ -43,7 +43,7 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
    cp .env.example .env
    ```
 
-   Set `DATABASE_URL` (see `.env.example`; default matches `docker-compose.yml`).
+   Set `DATABASE_URL` (or `DATABASE_POSTGRES_URL` from Neon). For auth with `vercel dev`, set **`BETTER_AUTH_SECRET`** (e.g. `openssl rand -base64 32`) and **`BETTER_AUTH_URL=http://localhost:3000`** (match the URL Vercel prints).
 
 3. **Schema + seed**:
 
@@ -83,9 +83,10 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 ## Deployment (Vercel)
 
 - Connect the repo to Vercel; `vercel.json` sets **Vite** build output to `dist`.
-- Set **`DATABASE_URL`** in the project environment (e.g. Neon or Vercel Postgres).
-- After first deploy (or anytime the schema changes), run **`npm run db:migrate`** and **`npm run db:seed`** against the **production** `DATABASE_URL` from a secure machine (do not commit secrets). Ship new migration files in the repo before migrating production.
-- `api/products.ts` → **`GET /api/products`**; `api/orders.ts` → **`POST /api/orders`** (requires `DATABASE_URL` in the Vercel environment).
+- Set **`DATABASE_URL`** or **`DATABASE_POSTGRES_URL`** in the project environment (e.g. Neon).
+- **Auth (Phase 4):** set **`BETTER_AUTH_SECRET`** (≥32 characters) and **`BETTER_AUTH_URL`** to your production site origin (e.g. `https://your-project.vercel.app`). Optional **`BETTER_AUTH_TRUSTED_ORIGINS`** for extra allowed origins (comma-separated).
+- After first deploy (or anytime the schema changes), run **`npm run db:migrate`** and **`npm run db:seed`** against the **production** database URL from a secure machine (do not commit secrets). Ship new migration files in the repo before migrating production.
+- `api/products.ts` → **`GET /api/products`**; `api/orders.ts` → **`POST /api/orders`**; `api/auth/[...all].ts` → **`/api/auth/*`** (Better Auth).
 
 `VITE_API_BASE` is only needed if the API is hosted on a **different origin** than the SPA.
 
@@ -96,7 +97,8 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 - **State** — [`src/store/StoreContext.tsx`](src/store/StoreContext.tsx): cart, wishlist, views, catalog load state, WebMCP-related UI state.
 - **Persistence (Phase 1)** — [`src/lib/persist.ts`](src/lib/persist.ts): cart/wishlist in `localStorage`; after Phase 2, persistence syncs once the **API catalog** has loaded.
 - **Catalog (Phase 2)** — Loaded from **`GET /api/products`** with fallback to [`src/data/products.ts`](src/data/products.ts).
-- **Orders (Phase 3)** — **`POST /api/orders`** creates `orders` + `order_lines`; checkout needs **`vercel dev`** or deployed API + `DATABASE_URL`.
+- **Orders (Phase 3)** — **`POST /api/orders`** creates `orders` + `order_lines`; checkout needs **`vercel dev`** or deployed API + database URL.
+- **Auth (Phase 4)** — [`auth.ts`](auth.ts), [`api/auth/[...all].ts`](api/auth/[...all].ts), [`src/lib/authClient.ts`](src/lib/authClient.ts); header **Sign in** opens account UI; orders include **`user_id`** when the session cookie is present (`credentials: "include"` on checkout).
 - **Imperative WebMCP** — [`src/hooks/useWebMCP.ts`](src/hooks/useWebMCP.ts): tools register **after** the catalog is available; `product_id` is a **string** (use `get_products` / `list_products` for IDs).
 - **Declarative WebMCP** — [`src/components/DeclarativeView.tsx`](src/components/DeclarativeView.tsx), [`src/components/QuickBuyModal.tsx`](src/components/QuickBuyModal.tsx): forms use `toolname`, `tooldescription`, `toolparamdescription`, optional `toolautosubmit`.
 
@@ -135,8 +137,10 @@ TypeScript augments for WebMCP attributes: [`src/types/webmcp.d.ts`](src/types/w
 ## Project layout (high level)
 
 ```
+auth.ts                  # Better Auth server config (Drizzle adapter)
 api/products.ts          # GET /api/products
 api/orders.ts            # POST /api/orders
+api/auth/[...all].ts     # /api/auth/* (sessions, sign-in, etc.)
 db/                      # Drizzle schema + DB client
 drizzle.config.ts        # Drizzle Kit (+ dotenv for local .env)
 docker-compose.yml       # Optional local Postgres

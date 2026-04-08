@@ -57,9 +57,21 @@ After pulling schema changes, run **`npm run db:migrate`** against your database
 
 ---
 
-## Phase 4 — Auth (planned)
+## Phase 4 — Auth (done)
 
-**Goal:** Optional sign-in (e.g. Clerk), attach **`userId`** to orders, optional server-side cart merge.
+**Goal:** Users in Postgres, cookie sessions, optional sign-in; attach **`userId`** to orders when logged in.
+
+**What shipped**
+
+- **[Better Auth](https://www.better-auth.com/)** + Drizzle: `user`, `session`, `account`, `verification` in [`db/schema.ts`](../db/schema.ts); config [`auth.ts`](../auth.ts) at repo root.
+- **`/api/auth/*`** — catch-all [`api/auth/[...all].ts`](../api/auth/[...all].ts) via `toNodeHandler` (same origin as the SPA on Vercel / `vercel dev`).
+- **Email + password** (`emailAndPassword.enabled`). Phone OTP can be added later with the `phoneNumber` plugin + SMS provider.
+- **SPA:** [`authClient`](../src/lib/authClient.ts) (`credentials: "include"`), header **Sign in** → [`AuthPanel`](../src/components/AuthPanel.tsx); orders **`POST /api/orders`** sends cookies so [`api/orders.ts`](../api/orders.ts) can `getSession` and set `orders.user_id`.
+- **Env (server):** `BETTER_AUTH_SECRET` (≥32 chars), `BETTER_AUTH_URL` (e.g. `https://<project>.vercel.app` or `http://localhost:3000` for `vercel dev`). Optional `BETTER_AUTH_TRUSTED_ORIGINS` (comma-separated) for extra origins.
+
+**Migration:** [`drizzle/0002_elite_harry_osborn.sql`](../drizzle/0002_elite_harry_osborn.sql) — run `npm run db:migrate` after pull.
+
+**Not in scope:** Server-side cart merge, OAuth providers, or phone OTP (planned as follow-ups).
 
 ---
 

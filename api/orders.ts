@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 import { inArray } from "drizzle-orm";
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "../auth.js";
 import { getDb } from "../db/client.js";
 import {
   orderLines as orderLinesTable,
@@ -60,6 +62,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  const sessionData = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  const userId = sessionData?.user?.id ?? null;
+
   const ids = [...new Set(lines.map((l) => l.productId))];
   const productRows = await db
     .select()
@@ -92,6 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await tx.insert(ordersTable).values({
         id: orderId,
         totalPaise,
+        ...(userId ? { userId } : {}),
       });
       await tx.insert(orderLinesTable).values(
         resolved.map((r) => ({
