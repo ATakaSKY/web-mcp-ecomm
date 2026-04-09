@@ -34,6 +34,11 @@ export function Header() {
           🛒 Cart
           {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
         </button>
+        {session?.user && (
+          <button type="button" className={navBtn("orders")} onClick={nav("orders")}>
+            Orders
+          </button>
+        )}
         <button
           type="button"
           className={styles.navBtn}

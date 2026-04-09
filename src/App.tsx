@@ -5,6 +5,7 @@ import { ProductGrid } from "./components/ProductGrid";
 import { CartView } from "./components/CartView";
 import { WishlistView } from "./components/WishlistView";
 import { CheckoutView } from "./components/CheckoutView";
+import { OrdersView } from "./components/OrdersView";
 import { DeclarativeView } from "./components/DeclarativeView";
 import { QuickBuyModal } from "./components/QuickBuyModal";
 import { BannerDot } from "./components/BannerDot";
@@ -31,6 +32,7 @@ function ShopApp() {
         {state.view === "cart" && <CartView />}
         {state.view === "wishlist" && <WishlistView />}
         {state.view === "checkout" && <CheckoutView />}
+        {state.view === "orders" && <OrdersView />}
         {state.view === "declarative" && <DeclarativeView />}
       </main>
       {state.quickBuyProductId && <QuickBuyModal />}

@@ -1,0 +1,153 @@
+.ordersSection {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: -0.75rem 0 1.25rem;
+  line-height: 1.45;
+}
+
+.orderList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.orderCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem 1.1rem;
+}
+
+.orderHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.orderMetaLabel {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.orderId {
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.orderDate {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0.85rem;
+}
+
+.status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.status_pending {
+  color: var(--text-muted);
+}
+
+.status_paid {
+  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+}
+
+.status_fulfilled {
+  color: #2e7d32;
+  border-color: color-mix(in oklab, #2e7d32 30%, var(--border));
+}
+
+.lineList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.lineRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lineImg {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.lineInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.lineName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lineQty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.lineSubtotal {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.orderTotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.9rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.orderTotal span:last-child {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--accent);
+}

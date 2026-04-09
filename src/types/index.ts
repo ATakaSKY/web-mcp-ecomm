@@ -12,7 +12,29 @@ export interface CartItem {
   quantity: number;
 }
 
-export type View = "shop" | "cart" | "wishlist" | "checkout" | "declarative";
+export type View =
+  | "shop"
+  | "cart"
+  | "wishlist"
+  | "checkout"
+  | "declarative"
+  | "orders";
+
+export type OrderStatus = "pending" | "paid" | "fulfilled";
+
+export interface UserOrderLine {
+  quantity: number;
+  unitPrice: number;
+  product: Pick<Product, "id" | "name" | "image">;
+}
+
+export interface UserOrder {
+  id: string;
+  status: OrderStatus;
+  totalPaise: number;
+  createdAt: string | null;
+  lines: UserOrderLine[];
+}
 
 export type StoreAction =
   | { type: "ADD_TO_CART"; productId: string; quantity?: number }

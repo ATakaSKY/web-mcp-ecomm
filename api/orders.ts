@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
-import { inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
 import { getDb } from "../db/client.js";
@@ -19,7 +19,90 @@ function linePaise(unitPrice: number, quantity: number): number {
   return Math.round(unitPrice * 100) * quantity;
 }
 
+async function handleGetMyOrders(req: VercelRequest, res: VercelResponse) {
+  const db = getDb();
+  if (!db) {
+    res.status(503).json({
+      error: "Orders require a database. Set DATABASE_URL and run npm run db:migrate.",
+    });
+    return;
+  }
+
+  const sessionData = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  const userId = sessionData?.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Sign in required" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      orderId: ordersTable.id,
+      orderStatus: ordersTable.status,
+      orderTotalPaise: ordersTable.totalPaise,
+      orderCreatedAt: ordersTable.createdAt,
+      quantity: orderLinesTable.quantity,
+      unitPrice: orderLinesTable.unitPrice,
+      productId: productsTable.id,
+      productName: productsTable.name,
+      productImage: productsTable.image,
+    })
+    .from(ordersTable)
+    .innerJoin(orderLinesTable, eq(orderLinesTable.orderId, ordersTable.id))
+    .innerJoin(productsTable, eq(productsTable.id, orderLinesTable.productId))
+    .where(eq(ordersTable.userId, userId))
+    .orderBy(desc(ordersTable.createdAt), asc(orderLinesTable.id));
+
+  type LineOut = {
+    quantity: number;
+    unitPrice: number;
+    product: { id: string; name: string; image: string };
+  };
+  type OrderOut = {
+    id: string;
+    status: string;
+    totalPaise: number;
+    createdAt: string | null;
+    lines: LineOut[];
+  };
+
+  const byOrderId = new Map<string, OrderOut>();
+  for (const row of rows) {
+    let order = byOrderId.get(row.orderId);
+    if (!order) {
+      order = {
+        id: row.orderId,
+        status: row.orderStatus,
+        totalPaise: row.orderTotalPaise,
+        createdAt: row.orderCreatedAt
+          ? row.orderCreatedAt.toISOString()
+          : null,
+        lines: [],
+      };
+      byOrderId.set(row.orderId, order);
+    }
+    order.lines.push({
+      quantity: row.quantity,
+      unitPrice: row.unitPrice,
+      product: {
+        id: row.productId,
+        name: row.productName,
+        image: row.productImage,
+      },
+    });
+  }
+
+  res.status(200).json({ orders: [...byOrderId.values()] });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === "GET") {
+    await handleGetMyOrders(req, res);
+    return;
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
