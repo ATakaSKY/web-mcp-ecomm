@@ -12,14 +12,6 @@ export interface CartItem {
   quantity: number;
 }
 
-export type View =
-  | "shop"
-  | "cart"
-  | "wishlist"
-  | "checkout"
-  | "declarative"
-  | "orders";
-
 export type OrderStatus = "pending" | "paid" | "fulfilled";
 
 export interface UserOrderLine {
@@ -45,7 +37,6 @@ export type StoreAction =
   | { type: "SET_PRODUCTS_ERROR"; error: string }
   | { type: "PURCHASE_SUCCESS"; orderId: string }
   | { type: "QUICK_BUY_ORDER_SUCCESS"; orderId: string }
-  | { type: "SET_VIEW"; view: View }
   | { type: "RESET_ORDER" }
   | { type: "OPEN_QUICK_BUY"; productId: string }
   | { type: "CLOSE_QUICK_BUY" };

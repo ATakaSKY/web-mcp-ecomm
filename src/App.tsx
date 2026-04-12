@@ -1,3 +1,11 @@
+import { useEffect, useRef } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { StoreProvider, useStore } from "./store/StoreContext";
 import { useWebMCP } from "./hooks/useWebMCP";
 import { Header } from "./components/Header";
@@ -9,12 +17,23 @@ import { OrdersView } from "./components/OrdersView";
 import { DeclarativeView } from "./components/DeclarativeView";
 import { QuickBuyModal } from "./components/QuickBuyModal";
 import { BannerDot } from "./components/BannerDot";
+import { ROUTES } from "./lib/routes";
 import styles from "./App.module.css";
 
-function ShopApp() {
+function ShopRoutes() {
   const { state, dispatch } = useStore();
+  const location = useLocation();
+  const prevPathRef = useRef(location.pathname);
 
-  useWebMCP(state.cart, state.wishlist, dispatch, state.products);
+  useWebMCP(state.cart, state.wishlist, dispatch, state.products, ROUTES.checkout);
+
+  useEffect(() => {
+    const prev = prevPathRef.current;
+    if (prev === ROUTES.checkout && location.pathname !== ROUTES.checkout) {
+      dispatch({ type: "RESET_ORDER" });
+    }
+    prevPathRef.current = location.pathname;
+  }, [location.pathname, dispatch]);
 
   return (
     <>
@@ -28,12 +47,15 @@ function ShopApp() {
             Try <em>open_quick_buy</em> to see a modal with dynamic tool registration.
           </span>
         </div>
-        {state.view === "shop" && <ProductGrid />}
-        {state.view === "cart" && <CartView />}
-        {state.view === "wishlist" && <WishlistView />}
-        {state.view === "checkout" && <CheckoutView />}
-        {state.view === "orders" && <OrdersView />}
-        {state.view === "declarative" && <DeclarativeView />}
+        <Routes>
+          <Route path={ROUTES.home} element={<ProductGrid />} />
+          <Route path={ROUTES.cart} element={<CartView />} />
+          <Route path={ROUTES.wishlist} element={<WishlistView />} />
+          <Route path={ROUTES.checkout} element={<CheckoutView />} />
+          <Route path={ROUTES.orders} element={<OrdersView />} />
+          <Route path={ROUTES.declarative} element={<DeclarativeView />} />
+          <Route path="*" element={<Navigate to={ROUTES.home} replace />} />
+        </Routes>
       </main>
       {state.quickBuyProductId && <QuickBuyModal />}
     </>
@@ -43,7 +65,9 @@ function ShopApp() {
 export default function App() {
   return (
     <StoreProvider>
-      <ShopApp />
+      <BrowserRouter>
+        <ShopRoutes />
+      </BrowserRouter>
     </StoreProvider>
   );
 }

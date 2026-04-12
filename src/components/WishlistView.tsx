@@ -1,11 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { useStore } from "../store/StoreContext";
+import { ROUTES } from "../lib/routes";
 import { ProductCard } from "./ProductCard";
 import btn from "./buttons.module.css";
 import grid from "./ProductGrid.module.css";
 import views from "./views.module.css";
 
 export function WishlistView() {
-  const { state, dispatch } = useStore();
+  const navigate = useNavigate();
+  const { state } = useStore();
   const catalog = state.products ?? [];
   const wishlisted = catalog.filter((p) => state.wishlist.includes(p.id));
 
@@ -23,7 +26,7 @@ export function WishlistView() {
       <section className={`${views.viewSection} ${views.emptyState}`}>
         <h2 className={views.viewTitle}>Your Wishlist</h2>
         <p>No items in your wishlist yet.</p>
-        <button type="button" className={btn.btnPrimary} onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
+        <button type="button" className={btn.btnPrimary} onClick={() => navigate(ROUTES.home)}>
           Browse Products
         </button>
       </section>

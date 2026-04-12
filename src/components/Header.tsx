@@ -1,43 +1,47 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import { useThemePreference } from "../hooks/useThemePreference";
 import { useStore } from "../store/StoreContext";
 import { authClient } from "../lib/authClient";
 import type { ThemePreference } from "../lib/themePreference";
-import type { View } from "../types";
+import { ROUTES } from "../lib/routes";
 import { AuthPanel } from "./AuthPanel";
 import styles from "./Header.module.css";
 
+function navClass(isActive: boolean) {
+  return isActive ? `${styles.navBtn} ${styles.navBtnActive}` : styles.navBtn;
+}
+
 export function Header() {
-  const { state, dispatch, cartCount } = useStore();
+  const { state, cartCount } = useStore();
   const { preference, setPreference } = useThemePreference();
   const [authOpen, setAuthOpen] = useState(false);
   const { data: session, isPending: sessionPending } = authClient.useSession();
 
-  const nav = (view: View) => () => dispatch({ type: "SET_VIEW", view });
-  const navBtn = (v: View) =>
-    state.view === v ? `${styles.navBtn} ${styles.navBtnActive}` : styles.navBtn;
-
   return (
     <header className={styles.appHeader}>
-      <button type="button" className={styles.logo} onClick={nav("shop")}>
+      <NavLink to={ROUTES.home} end className={styles.logo}>
         ⚡ WebMCP Shop
-      </button>
+      </NavLink>
       <nav>
-        <button type="button" className={navBtn("shop")} onClick={nav("shop")}>
+        <NavLink to={ROUTES.home} end className={({ isActive }) => navClass(isActive)}>
           Products
-        </button>
-        <button type="button" className={navBtn("wishlist")} onClick={nav("wishlist")}>
+        </NavLink>
+        <NavLink
+          to={ROUTES.wishlist}
+          className={({ isActive }) => navClass(isActive)}
+        >
           ♥ Wishlist
           {state.wishlist.length > 0 && <span className={styles.badge}>{state.wishlist.length}</span>}
-        </button>
-        <button type="button" className={navBtn("cart")} onClick={nav("cart")}>
+        </NavLink>
+        <NavLink to={ROUTES.cart} className={({ isActive }) => navClass(isActive)}>
           🛒 Cart
           {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-        </button>
+        </NavLink>
         {session?.user && (
-          <button type="button" className={navBtn("orders")} onClick={nav("orders")}>
+          <NavLink to={ROUTES.orders} className={({ isActive }) => navClass(isActive)}>
             Orders
-          </button>
+          </NavLink>
         )}
         <button
           type="button"
@@ -48,9 +52,12 @@ export function Header() {
           {sessionPending ? "…" : session?.user ? `👤 ${session.user.name}` : "Sign in"}
         </button>
         <span className={styles.navDivider} />
-        <button type="button" className={navBtn("declarative")} onClick={nav("declarative")}>
+        <NavLink
+          to={ROUTES.declarative}
+          className={({ isActive }) => navClass(isActive)}
+        >
           📋 Declarative API
-        </button>
+        </NavLink>
         <span className={styles.navDivider} />
         <label className={styles.themeSelectLabel} htmlFor="header-theme-select">
           <span className={styles.themeSelectSr}>Theme</span>

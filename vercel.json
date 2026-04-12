@@ -11,6 +11,46 @@
     {
       "source": "/api/auth/(.*)",
       "destination": "/api/auth-internal?p=$1"
+    },
+    {
+      "source": "/cart",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cart/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wishlist",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wishlist/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/checkout",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/checkout/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/orders",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/orders/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/declarative",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/declarative/",
+      "destination": "/index.html"
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch } from "react";
+import { useNavigate } from "react-router-dom";
 import { getApiBase } from "../lib/apiBase";
 import { formatInr } from "../lib/formatPrice";
 import type { CartItem, Product } from "../types";
@@ -15,10 +16,19 @@ export function useWebMCP(
   wishlist: string[],
   dispatch: Dispatch<StoreAction>,
   products: Product[] | null,
+  checkoutPath: string,
 ) {
+  const navigate = useNavigate();
   const cartRef = useRef(cart);
   const wishlistRef = useRef(wishlist);
   const productsRef = useRef(products);
+  const navigateRef = useRef(navigate);
+  const checkoutPathRef = useRef(checkoutPath);
+
+  useLayoutEffect(() => {
+    navigateRef.current = navigate;
+    checkoutPathRef.current = checkoutPath;
+  }, [navigate, checkoutPath]);
 
   useLayoutEffect(() => {
     cartRef.current = cart;
@@ -198,6 +208,7 @@ export function useWebMCP(
             };
           }
           dispatch({ type: "PURCHASE_SUCCESS", orderId: data.orderId });
+          navigateRef.current(checkoutPathRef.current, { replace: true });
           return {
             content: [
               {
@@ -327,5 +338,5 @@ export function useWebMCP(
       }
       controller.abort();
     };
-  }, [dispatch, products]);
+  }, [dispatch, products, checkoutPath]);
 }

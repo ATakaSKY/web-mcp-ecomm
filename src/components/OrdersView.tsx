@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useStore } from "../store/StoreContext";
+import { useNavigate } from "react-router-dom";
 import { authClient } from "../lib/authClient";
 import { getApiBase } from "../lib/apiBase";
 import { formatInr } from "../lib/formatPrice";
 import type { UserOrder } from "../types";
+import { ROUTES } from "../lib/routes";
 import btn from "./buttons.module.css";
 import styles from "./OrdersView.module.css";
 import views from "./views.module.css";
@@ -34,7 +35,7 @@ function statusLabel(status: UserOrder["status"]): string {
 }
 
 export function OrdersView() {
-  const { dispatch } = useStore();
+  const navigate = useNavigate();
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const userId = session?.user?.id;
   const [orders, setOrders] = useState<UserOrder[] | null>(null);
@@ -102,7 +103,7 @@ export function OrdersView() {
         <button
           type="button"
           className={btn.btnPrimary}
-          onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}
+          onClick={() => navigate(ROUTES.home)}
         >
           Back to shop
         </button>
@@ -127,7 +128,7 @@ export function OrdersView() {
         <button
           type="button"
           className={btn.btnPrimary}
-          onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}
+          onClick={() => navigate(ROUTES.home)}
         >
           Back to shop
         </button>
@@ -145,7 +146,7 @@ export function OrdersView() {
         <button
           type="button"
           className={btn.btnPrimary}
-          onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}
+          onClick={() => navigate(ROUTES.home)}
         >
           Browse products
         </button>

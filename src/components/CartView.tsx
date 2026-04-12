@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStore } from "../store/StoreContext";
 import { getApiBase } from "../lib/apiBase";
+import { ROUTES } from "../lib/routes";
 import { formatInr } from "../lib/formatPrice";
 import btn from "./buttons.module.css";
 import styles from "./CartView.module.css";
 import views from "./views.module.css";
 
 export function CartView() {
+  const navigate = useNavigate();
   const { state, dispatch, cartTotal } = useStore();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -16,7 +19,7 @@ export function CartView() {
       <section className={`${views.viewSection} ${views.emptyState}`}>
         <h2 className={views.viewTitle}>Your Cart</h2>
         <p>Your cart is empty. Start shopping!</p>
-        <button type="button" className={btn.btnPrimary} onClick={() => dispatch({ type: "SET_VIEW", view: "shop" })}>
+        <button type="button" className={btn.btnPrimary} onClick={() => navigate(ROUTES.home)}>
           Browse Products
         </button>
       </section>
@@ -48,6 +51,7 @@ export function CartView() {
         return;
       }
       dispatch({ type: "PURCHASE_SUCCESS", orderId: data.orderId });
+      navigate(ROUTES.checkout, { replace: true });
     } catch {
       setErr("Network error. Use vercel dev with DATABASE_URL for orders, or check your connection.");
     } finally {

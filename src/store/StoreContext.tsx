@@ -5,7 +5,7 @@ import {
   useReducer,
   type ReactNode,
 } from "react";
-import type { CartItem, Product, StoreAction, View } from "../types";
+import type { CartItem, Product, StoreAction } from "../types";
 import { getApiBase } from "../lib/apiBase";
 import {
   hydrateCart,
@@ -20,7 +20,6 @@ interface State {
   productsError: string | null;
   cart: CartItem[];
   wishlist: string[]; // product IDs
-  view: View;
   orderPlaced: boolean;
   lastOrderId: string | null;
   quickBuyProductId: string | null;
@@ -34,7 +33,6 @@ function init(): State {
     productsError: null,
     cart: [],
     wishlist: persisted.wishlist,
-    view: "shop",
     orderPlaced: false,
     lastOrderId: null,
     quickBuyProductId: null,
@@ -123,24 +121,15 @@ function reducer(state: State, action: StoreAction): State {
         ...state,
         cart: [],
         orderPlaced: true,
-        view: "checkout",
         lastOrderId: action.orderId,
       };
     case "QUICK_BUY_ORDER_SUCCESS":
       return {
         ...state,
-        orderPlaced: true,
         lastOrderId: action.orderId,
       };
-    case "SET_VIEW":
-      return {
-        ...state,
-        view: action.view,
-        orderPlaced: false,
-        lastOrderId: null,
-      };
     case "RESET_ORDER":
-      return { ...state, orderPlaced: false };
+      return { ...state, orderPlaced: false, lastOrderId: null };
     case "OPEN_QUICK_BUY":
       return { ...state, quickBuyProductId: action.productId };
     case "CLOSE_QUICK_BUY":
