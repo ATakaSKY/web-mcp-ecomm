@@ -10,37 +10,37 @@ See also [PHASES.md](./PHASES.md) Phase 5.
 
 ```mermaid
 flowchart TB
-  subgraph Browser["Browser (SPA)"]
-    A[User: Complete purchase] --> B["POST /api/orders\n(cart lines)"]
-    B --> C{201 orderId + totalPaise?}
-    C -->|no| E[Show error]
-    C -->|yes| D["POST /api/razorpay-create-order\n{ orderId }"]
-    D --> F{Keys configured?}
-    F -->|no: skipped| G["sessionStorage checkoutRazorpaySkipped\nPURCHASE_SUCCESS → /checkout"]
-    F -->|yes| H[Load Checkout.js + open modal\nkey, order_id, amount, INR]
-    H --> I[User pays on Razorpay\n(UPI / card / etc.)]
-    I --> J["Checkout handler:\nrazorpay_payment_id, order_id, signature"]
-    J --> K["POST /api/razorpay-verify\n(HMAC: order_id|payment_id)"]
-    K --> L{Valid + pending row matches?}
-    L -->|yes| M["DB: status = paid\nPURCHASE_SUCCESS → /checkout"]
-    L -->|no| N[Show verify error]
+  subgraph Browser["Browser SPA"]
+    A["User: Complete purchase"] --> B["POST /api/orders, cart lines"]
+    B --> C{"201 + orderId + totalPaise?"}
+    C -->|no| E["Show error"]
+    C -->|yes| D["POST /api/razorpay-create-order, body orderId"]
+    D --> F{"Keys configured?"}
+    F -->|no skipped| G["sessionStorage flag, navigate checkout pending"]
+    F -->|yes| H["Load Checkout.js modal, key order_id amount INR"]
+    H --> I["User pays: UPI, card, netbanking, wallets"]
+    I --> J["Handler: payment_id, order_id, signature"]
+    J --> K["POST /api/razorpay-verify, HMAC check"]
+    K --> L{"Valid and row matches?"}
+    L -->|yes| M["DB status paid, success checkout"]
+    L -->|no| N["Show verify error"]
   end
 
-  subgraph Razorpay["Razorpay"]
-    R1[Orders API:\nRazorpay Order created] --- H
-    R2[Payment captured] --- I
+  subgraph RZP["Razorpay"]
+    R1["Orders API creates Razorpay Order"] --- H
+    R2["Payment captured"] --- I
   end
 
-  subgraph Server["Your API (Vercel)"]
+  subgraph Server["Your API Vercel"]
     B
     D
     K
-    W["POST /api/webhooks/razorpay\npayment.captured"]
+    W["POST /api/webhooks/razorpay payment.captured"]
   end
 
   subgraph DB["Postgres"]
-    P1[(orders: pending,\nrazorpay_order_id set)]
-    P2[(orders: paid)]
+    P1["Row pending, razorpay_order_id set"]
+    P2["Row paid"]
     B --> P1
     D --> P1
     K --> P2
@@ -48,7 +48,7 @@ flowchart TB
   end
 
   R2 -.->|async| W
-  W -->|X-Razorpay-Signature\nvs raw body| P2
+  W -->|signed webhook| P2
 ```
 
 ---
