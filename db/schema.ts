@@ -123,6 +123,8 @@ export const orders = pgTable("orders", {
   status: orderStatusEnum("status").notNull().default("pending"),
   totalPaise: integer("total_paise").notNull(),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  /** Latest Razorpay Order id (Orders API); set when checkout starts. */
+  razorpayOrderId: text("razorpay_order_id").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 

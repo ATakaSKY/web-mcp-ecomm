@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase } from "../lib/apiBase";
 import { formatInr } from "../lib/formatPrice";
+import { openRazorpayPaymentModal } from "../lib/razorpayCheckout";
+import { createRazorpayOrderForCheckout } from "../lib/razorpayFlow";
 import { useStore } from "../store/StoreContext";
 import { BannerDot } from "./BannerDot";
 import btn from "./buttons.module.css";
@@ -179,10 +181,21 @@ export function QuickBuyModal() {
                   : 0) +
               (orderData.giftWrap ? GIFT_WRAP_INR : 0);
 
-            const run = async () => {
+            const run = async (): Promise<{ orderId: string; usedRazorpay: boolean }> => {
               const orderId = await postQuickBuyOrder(product.id, orderData.quantity);
-              dispatch({ type: "QUICK_BUY_ORDER_SUCCESS", orderId });
-              return orderId;
+              const rzp = await createRazorpayOrderForCheckout(orderId);
+              if (!rzp.ok) throw new Error(rzp.message);
+              if ("skipped" in rzp.data && rzp.data.skipped) {
+                dispatch({ type: "QUICK_BUY_ORDER_SUCCESS", orderId });
+                return { orderId, usedRazorpay: false };
+              }
+              const pay = await openRazorpayPaymentModal(rzp.data);
+              if (pay.step === "error") throw new Error(pay.message);
+              if (pay.step === "dismissed") {
+                throw new Error("Payment was not completed. The order is still pending.");
+              }
+              dispatch({ type: "QUICK_BUY_ORDER_SUCCESS", orderId: pay.appOrderId });
+              return { orderId: pay.appOrderId, usedRazorpay: true };
             };
 
             const onFailure = (message: string) => {
@@ -196,13 +209,15 @@ export function QuickBuyModal() {
             if (se.agentInvoked && se.respondWith) {
               se.respondWith(
                 run()
-                  .then((orderId) => {
+                  .then(({ orderId, usedRazorpay }) => {
                     setTimeout(() => setOrderSuccess(true), 100);
                     return {
                       status: "success" as const,
                       orderId,
                       order: { ...orderData, total: total.toFixed(2) },
-                      message: `Order confirmed! Order id: ${orderId}. ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: ${formatInr(total)}.`,
+                      message: usedRazorpay
+                        ? `Payment successful via Razorpay. Order id: ${orderId}. ${orderData.quantity}x ${product.name} to ${orderData.fullName}. Total: ${formatInr(total)}.`
+                        : `Order confirmed! Order id: ${orderId}. ${orderData.quantity}x ${product.name} shipping to ${orderData.fullName} at ${orderData.address}, ${orderData.city} ${orderData.zipCode}. Total: ${formatInr(total)}. (Razorpay not configured — order is pending.)`,
                     };
                   })
                   .catch((err: unknown) => ({

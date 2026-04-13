@@ -4,6 +4,8 @@ import { useStore } from "../store/StoreContext";
 import { getApiBase } from "../lib/apiBase";
 import { ROUTES } from "../lib/routes";
 import { formatInr } from "../lib/formatPrice";
+import { openRazorpayPaymentModal } from "../lib/razorpayCheckout";
+import { createRazorpayOrderForCheckout } from "../lib/razorpayFlow";
 import btn from "./buttons.module.css";
 import styles from "./CartView.module.css";
 import views from "./views.module.css";
@@ -50,7 +52,34 @@ export function CartView() {
         setErr("Invalid response from server");
         return;
       }
-      dispatch({ type: "PURCHASE_SUCCESS", orderId: data.orderId });
+
+      const appOrderId = data.orderId;
+      const rzp = await createRazorpayOrderForCheckout(appOrderId);
+      if (!rzp.ok) {
+        setErr(rzp.message);
+        return;
+      }
+      if ("skipped" in rzp.data && rzp.data.skipped) {
+        try {
+          sessionStorage.setItem("checkoutRazorpaySkipped", "1");
+        } catch {
+          /* ignore */
+        }
+        dispatch({ type: "PURCHASE_SUCCESS", orderId: appOrderId });
+        navigate(ROUTES.checkout, { replace: true });
+        return;
+      }
+
+      const pay = await openRazorpayPaymentModal(rzp.data);
+      if (pay.step === "error") {
+        setErr(pay.message);
+        return;
+      }
+      if (pay.step === "dismissed") {
+        setErr("Payment was not completed. Your order is still pending — you can try again from the cart.");
+        return;
+      }
+      dispatch({ type: "PURCHASE_SUCCESS", orderId: pay.appOrderId });
       navigate(ROUTES.checkout, { replace: true });
     } catch {
       setErr("Network error. Use vercel dev with DATABASE_URL for orders, or check your connection.");

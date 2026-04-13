@@ -3,6 +3,8 @@ import type { Dispatch } from "react";
 import { useNavigate } from "react-router-dom";
 import { getApiBase } from "../lib/apiBase";
 import { formatInr } from "../lib/formatPrice";
+import { openRazorpayPaymentModal } from "../lib/razorpayCheckout";
+import { createRazorpayOrderForCheckout } from "../lib/razorpayFlow";
 import type { CartItem, Product } from "../types";
 import type { StoreAction } from "../types";
 
@@ -168,7 +170,8 @@ export function useWebMCP(
       name: "purchase",
       description:
         "Place an order for all items in the cart via POST /api/orders (requires DATABASE_URL on the server). " +
-        "Clears the cart and shows checkout on success. Only call when the user explicitly wants to check out.",
+        "If Razorpay is configured, opens the Razorpay checkout (UPI, cards, etc.); otherwise completes as a pending demo order. " +
+        "Clears the cart after payment or demo checkout. Only call when the user explicitly wants to check out.",
       inputSchema: { type: "object", properties: {} },
       execute: async () => {
         const currentCart = cartRef.current;
@@ -207,13 +210,63 @@ export function useWebMCP(
               content: [{ type: "text", text: "Order failed: invalid server response." }],
             };
           }
-          dispatch({ type: "PURCHASE_SUCCESS", orderId: data.orderId });
+          const appOrderId = data.orderId;
+          const rzp = await createRazorpayOrderForCheckout(appOrderId);
+          if (!rzp.ok) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Order ${appOrderId} created but payment setup failed: ${rzp.message}`,
+                },
+              ],
+            };
+          }
+          if ("skipped" in rzp.data && rzp.data.skipped) {
+            try {
+              sessionStorage.setItem("checkoutRazorpaySkipped", "1");
+            } catch {
+              /* ignore */
+            }
+            dispatch({ type: "PURCHASE_SUCCESS", orderId: appOrderId });
+            navigateRef.current(checkoutPathRef.current, { replace: true });
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Order placed (Razorpay not configured). Order id: ${appOrderId}. Items: ${summary}. Total: ${formatInr(total)} — status stays pending until you add RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET.`,
+                },
+              ],
+            };
+          }
+          const pay = await openRazorpayPaymentModal(rzp.data);
+          if (pay.step === "error") {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Order ${appOrderId} created but payment failed: ${pay.message}`,
+                },
+              ],
+            };
+          }
+          if (pay.step === "dismissed") {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Order ${appOrderId} is pending — checkout was closed without paying. Total: ${formatInr(total)}. Try purchasing again to pay.`,
+                },
+              ],
+            };
+          }
+          dispatch({ type: "PURCHASE_SUCCESS", orderId: pay.appOrderId });
           navigateRef.current(checkoutPathRef.current, { replace: true });
           return {
             content: [
               {
                 type: "text",
-                text: `Order placed! Order id: ${data.orderId}. Items: ${summary}. Total: ${formatInr(total)}`,
+                text: `Payment successful (Razorpay). Order id: ${pay.appOrderId}. Items: ${summary}. Total: ${formatInr(total)}`,
               },
             ],
           };

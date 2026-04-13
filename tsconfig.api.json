@@ -10,5 +10,12 @@
     "verbatimModuleSyntax": true,
     "types": ["node"]
   },
-  "include": ["api/**/*.ts", "auth.ts", "db/**/*.ts", "src/data/**/*.ts", "src/types/**/*.ts"]
+  "include": [
+    "api/**/*.ts",
+    "auth.ts",
+    "db/**/*.ts",
+    "lib/**/*.ts",
+    "src/data/**/*.ts",
+    "src/types/**/*.ts"
+  ]
 }

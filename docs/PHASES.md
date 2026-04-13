@@ -44,7 +44,7 @@ See the main [README](../README.md) for commands and layout.
 
 ## Phase 3 — Orders (done)
 
-**Goal:** Persist **`POST /api/orders`** with Drizzle (`orders`, `order_lines`), prices taken from the DB at order time, checkout UI + WebMCP **`purchase`** calling the API. No payment yet (`status` stays `pending` until a later phase).
+**Goal:** Persist **`POST /api/orders`** with Drizzle (`orders`, `order_lines`), prices taken from the DB at order time, checkout UI + WebMCP **`purchase`** calling the API. Payment capture is [**Phase 5**](#phase-5--razorpay-india--webhooks-done) (Razorpay); until then `status` can stay `pending`.
 
 **What shipped**
 
@@ -75,9 +75,13 @@ After pulling schema changes, run **`npm run db:migrate`** against your database
 
 ---
 
-## Phase 5 — Payments + hardening (planned)
+## Phase 5 — Razorpay (India) + webhooks (done)
 
-**Goal:** Stripe Checkout + webhooks, order status → `paid`, inventory updates, rate limits / observability as needed.
+**Goal:** Razorpay Standard Checkout in **INR** (UPI, cards, netbanking, wallets) so **`orders.status`** can move **`pending` → `paid`**.
+
+**Diagrams & walkthrough:** [docs/razorpay-flow.md](./razorpay-flow.md) (Mermaid flowchart + sequence + env table).
+
+Inventory, rate limits, and observability remain for later phases.
 
 ---
 

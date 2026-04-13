@@ -195,6 +195,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (e) {
     console.error("[api/orders]", e);
+    const code =
+      e && typeof e === "object" && "code" in e && typeof (e as { code: unknown }).code === "string"
+        ? (e as { code: string }).code
+        : undefined;
+    if (code === "23503") {
+      res.status(500).json({
+        error:
+          "Database rejected the order (account or product row missing). Try signing out and signing in again, run npm run db:migrate && npm run db:seed, then retry.",
+      });
+      return;
+    }
+    if (code === "42703" || code === "42P01") {
+      res.status(500).json({
+        error: "Database schema is out of date. Run: npm run db:migrate",
+      });
+      return;
+    }
     res.status(500).json({ error: "Failed to create order" });
     return;
   }
