@@ -139,3 +139,8 @@ export const orderLines = pgTable("order_lines", {
   quantity: integer("quantity").notNull(),
   unitPrice: real("unit_price").notNull(),
 });
+
+/** Empty probe table used to verify deploy-time migrations (GitHub Actions). */
+export const migrationProbe = pgTable("migration_probe", {
+  id: serial("id").primaryKey(),
+});

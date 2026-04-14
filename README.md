@@ -85,7 +85,8 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 - Connect the repo to Vercel; `vercel.json` sets **Vite** build output to `dist`.
 - Set **`DATABASE_URL`** or **`DATABASE_POSTGRES_URL`** in the project environment (e.g. Neon).
 - **Auth (Phase 4):** set **`BETTER_AUTH_SECRET`** (≥32 characters) and **`BETTER_AUTH_URL`** to your production site origin (e.g. `https://your-project.vercel.app`). Optional **`BETTER_AUTH_TRUSTED_ORIGINS`** for extra allowed origins (comma-separated).
-- After first deploy (or anytime the schema changes), run **`npm run db:migrate`** and **`npm run db:seed`** against the **production** database URL from a secure machine (do not commit secrets). Ship new migration files in the repo before migrating production.
+- **Migrations on production:** push to `main` runs [`.github/workflows/db-migrate.yml`](.github/workflows/db-migrate.yml), which executes **`npm run db:migrate`** using the **`DATABASE_URL`** [repository secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) (use the same Neon connection string as Vercel production). You can also run the workflow manually from the Actions tab (**Database migrate** → **Run workflow**). Ship new files under `drizzle/` in the same commit as schema changes.
+- **Seeding:** run **`npm run db:seed`** against production only when you need catalog data there (one-off from a secure machine with `DATABASE_URL=…` set for that command, or a dedicated workflow if you add one). Do not commit secrets.
 - `api/products.ts` → **`GET /api/products`**; `api/orders.ts` → **`POST /api/orders`**; `api/auth/[...all].ts` → **`/api/auth/*`** (Better Auth).
 
 `VITE_API_BASE` is only needed if the API is hosted on a **different origin** than the SPA.
