@@ -6,6 +6,13 @@ name: Database migrate
 on:
   push:
     branches: [main]
+    paths:
+      - "db/**"
+      - "drizzle/**"
+      - "drizzle.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/db-migrate.yml"
   workflow_dispatch:
 
 concurrency:
