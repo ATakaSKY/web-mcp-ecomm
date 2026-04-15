@@ -1,6 +1,6 @@
 # WebMCP Example — Demo Shop
 
-A small **React + TypeScript + Vite** app that demonstrates **WebMCP**: registering tools on `navigator.modelContext` so AI agents can drive a shop UI (cart, wishlist, checkout, and declarative HTML forms).
+A small **React + TypeScript + Vite** app that demonstrates **WebMCP**: registering tools on `navigator.modelContext` so AI agents can drive a shop UI (cart, wishlist, checkout, and declarative HTML forms)..
 
 The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** — client persistence; **Phase 2** — **Postgres + Drizzle** and **`GET /api/products`**; **Phase 3** — **`POST /api/orders`**; **Phase 4** — **Better Auth** (email/password, sessions in Postgres, `orders.user_id` when signed in).
 
@@ -64,19 +64,19 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 
 **Useful scripts**
 
-| Script                                    | Description                                                |
-| ----------------------------------------- | ---------------------------------------------------------- |
-| `npm run dev`                             | Vite only; catalog fallback from `src/data/products.ts`    |
-| `npm run docker:db:up` / `docker:db:down` | Start/stop Docker Postgres                                 |
-| `npm run docker:db:logs`                  | Follow DB logs                                             |
-| `npm run db:generate`                     | Create SQL migrations from `db/schema.ts` (commit `drizzle/`) |
-| `npm run db:migrate`                      | Apply pending migrations (loads `.env` via `drizzle.config.ts`) |
+| Script                                    | Description                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run dev`                             | Vite only; catalog fallback from `src/data/products.ts`           |
+| `npm run docker:db:up` / `docker:db:down` | Start/stop Docker Postgres                                        |
+| `npm run docker:db:logs`                  | Follow DB logs                                                    |
+| `npm run db:generate`                     | Create SQL migrations from `db/schema.ts` (commit `drizzle/`)     |
+| `npm run db:migrate`                      | Apply pending migrations (loads `.env` via `drizzle.config.ts`)   |
 | `npm run db:push`                         | Optional: sync schema without migration files (local prototyping) |
-| `npm run db:seed`                         | Seed `products` from `src/data/products.ts`                |
-| `npm run db:studio`                       | Drizzle Studio (needs `DATABASE_URL`)                      |
-| `npm run build`                           | Typecheck + production Vite build                          |
-| `npm run preview`                         | Serve the production build                                 |
-| `npm run lint`                            | ESLint                                                     |
+| `npm run db:seed`                         | Seed `products` from `src/data/products.ts`                       |
+| `npm run db:studio`                       | Drizzle Studio (needs `DATABASE_URL`)                             |
+| `npm run build`                           | Typecheck + production Vite build                                 |
+| `npm run preview`                         | Serve the production build                                        |
+| `npm run lint`                            | ESLint                                                            |
 
 ---
 
@@ -111,16 +111,16 @@ Static reference material: `architecture.html`, `public/webmcp-guide.html`.
 
 Registered when the catalog is non-empty (`navigator.modelContext` + Chrome flag).
 
-| Tool               | Purpose                                                                     |
-| ------------------ | --------------------------------------------------------------------------- |
-| `add_to_cart`      | Add by `product_id` (string); optional `quantity` (1–99).                   |
-| `remove_from_cart` | Remove line by `product_id`.                                                |
-| `toggle_wishlist`  | Toggle wishlist membership for `product_id`.                                |
+| Tool               | Purpose                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| `add_to_cart`      | Add by `product_id` (string); optional `quantity` (1–99).                            |
+| `remove_from_cart` | Remove line by `product_id`.                                                         |
+| `toggle_wishlist`  | Toggle wishlist membership for `product_id`.                                         |
 | `purchase`         | **`POST /api/orders`** with current cart; clears cart and shows order id (needs DB). |
-| `get_cart`         | Current lines and total.                                                    |
-| `get_products`     | List catalog; optional `category` filter (enum of current categories).      |
-| `list_products`    | Compact listing (same catalog snapshot).                                    |
-| `open_quick_buy`   | Opens Quick Buy modal; enables declarative `complete_quick_buy` while open. |
+| `get_cart`         | Current lines and total.                                                             |
+| `get_products`     | List catalog; optional `category` filter (enum of current categories).               |
+| `list_products`    | Compact listing (same catalog snapshot).                                             |
+| `open_quick_buy`   | Opens Quick Buy modal; enables declarative `complete_quick_buy` while open.          |
 
 ### Declarative (HTML attributes)
 
