@@ -7,6 +7,7 @@ import { formatInr } from "../lib/formatPrice";
 import { openRazorpayPaymentModal } from "../lib/razorpayCheckout";
 import { createRazorpayOrderForCheckout } from "../lib/razorpayFlow";
 import btn from "./buttons.module.css";
+import { ProductImage } from "./ProductImage";
 import styles from "./CartView.module.css";
 import views from "./views.module.css";
 
@@ -95,7 +96,11 @@ export function CartView() {
       <div className={styles.cartList}>
         {state.cart.map((item) => (
           <div key={item.product.id} className={styles.cartItem}>
-            <img src={item.product.image} alt={item.product.name} className={styles.cartItemImg} />
+            <ProductImage
+              src={item.product.image}
+              alt={item.product.name}
+              className={styles.cartItemImg}
+            />
             <div className={styles.cartItemInfo}>
               <h4>{item.product.name}</h4>
               <p className={styles.cartItemPrice}>{formatInr(item.product.price)}</p>

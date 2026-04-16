@@ -1,8 +1,8 @@
 # WebMCP Example — Demo Shop
 
-A small **React + TypeScript + Vite** app that demonstrates **WebMCP**: registering tools on `navigator.modelContext` so AI agents can drive a shop UI (cart, wishlist, checkout, and declarative HTML forms)..
+A small **React + TypeScript + Vite** app that demonstrates **WebMCP**: registering tools on `navigator.modelContext` so AI agents can drive a shop UI (cart, wishlist, checkout, and declarative HTML forms).
 
-The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** — client persistence; **Phase 2** — **Postgres + Drizzle** and **`GET /api/products`**; **Phase 3** — **`POST /api/orders`**; **Phase 4** — **Better Auth** (email/password, sessions in Postgres, `orders.user_id` when signed in).
+The repo is evolved in **phases** (see [docs/PHASES.md](docs/PHASES.md)): **Phase 1** — client persistence; **Phase 2** — **Postgres + Drizzle** and **`GET /api/products`**; **Phase 3** — **`POST /api/orders`**; **Phase 4** — **Better Auth**; **Phase 5** — **Razorpay**; **Phase 6** — **caching, CDN-friendly images, catalog admin API, CI contracts** ([docs/scale-ops.md](docs/scale-ops.md)).
 
 ---
 
@@ -77,6 +77,9 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 | `npm run build`                           | Typecheck + production Vite build                                 |
 | `npm run preview`                         | Serve the production build                                        |
 | `npm run lint`                            | ESLint                                                            |
+| `npm run check:contracts`                 | Validate fallback catalog + sample API shapes (CI) |
+
+Step-by-step checks (caching, admin API, images): [docs/manual-testing.md](docs/manual-testing.md).
 
 ---
 
@@ -87,6 +90,8 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 - **Auth (Phase 4):** set **`BETTER_AUTH_SECRET`** (≥32 characters) and **`BETTER_AUTH_URL`** to your production site origin (e.g. `https://your-project.vercel.app`). Optional **`BETTER_AUTH_TRUSTED_ORIGINS`** for extra allowed origins (comma-separated).
 - **Migrations on production:** a push to `main` that touches `db/`, `drizzle/`, `drizzle.config.ts`, root `package.json` / `package-lock.json`, or [`.github/workflows/db-migrate.yml`](.github/workflows/db-migrate.yml) runs that workflow, which executes **`npm run db:migrate`** using the **`DATABASE_URL`** [repository secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) (use the same Neon connection string as Vercel production). For anything else (or if a push did not match those paths), run it manually from the Actions tab (**Database migrate** → **Run workflow**). Ship new files under `drizzle/` in the same commit as schema changes.
 - **Seeding:** run **`npm run db:seed`** against production only when you need catalog data there (one-off from a secure machine with `DATABASE_URL=…` set for that command, or a dedicated workflow if you add one). Do not commit secrets.
+- **Phase 6 (ops):** [`vercel.json`](vercel.json) adds **cache headers** for assets, `/api/products`, and the HTML shell. Optional **`ADMIN_API_SECRET`** enables **`PUT /api/admin/product`** (see [docs/scale-ops.md](docs/scale-ops.md)).
+- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs **`check:contracts`**, **lint**, and **build** on pushes/PRs to `main`.
 - `api/products.ts` → **`GET /api/products`**; `api/orders.ts` → **`POST /api/orders`**; `api/auth/[...all].ts` → **`/api/auth/*`** (Better Auth).
 
 `VITE_API_BASE` is only needed if the API is hosted on a **different origin** than the SPA.
@@ -100,6 +105,8 @@ Open the URL Vite prints (typically [http://localhost:5173](http://localhost:517
 - **Catalog (Phase 2)** — Loaded from **`GET /api/products`** with fallback to [`src/data/products.ts`](src/data/products.ts).
 - **Orders (Phase 3)** — **`POST /api/orders`** creates `orders` + `order_lines`; checkout needs **`vercel dev`** or deployed API + database URL.
 - **Auth (Phase 4)** — [`auth.ts`](auth.ts), [`api/auth/[...all].ts`](api/auth/[...all].ts), [`src/lib/authClient.ts`](src/lib/authClient.ts); header **Sign in** opens account UI; orders include **`user_id`** when the session cookie is present (`credentials: "include"` on checkout).
+- **Payments (Phase 5)** — Razorpay Standard Checkout; see [docs/razorpay-flow.md](docs/razorpay-flow.md).
+- **Scale & ops (Phase 6)** — Cache headers ([`vercel.json`](vercel.json), [`api/products.ts`](api/products.ts)), [`ProductImage`](src/components/ProductImage.tsx), optional [`api/admin/product.ts`](api/admin/product.ts); [docs/scale-ops.md](docs/scale-ops.md).
 - **Imperative WebMCP** — [`src/hooks/useWebMCP.ts`](src/hooks/useWebMCP.ts): tools register **after** the catalog is available; `product_id` is a **string** (use `get_products` / `list_products` for IDs).
 - **Declarative WebMCP** — [`src/components/DeclarativeView.tsx`](src/components/DeclarativeView.tsx), [`src/components/QuickBuyModal.tsx`](src/components/QuickBuyModal.tsx): forms use `toolname`, `tooldescription`, `toolparamdescription`, optional `toolautosubmit`.
 
@@ -116,7 +123,7 @@ Registered when the catalog is non-empty (`navigator.modelContext` + Chrome flag
 | `add_to_cart`      | Add by `product_id` (string); optional `quantity` (1–99).                            |
 | `remove_from_cart` | Remove line by `product_id`.                                                         |
 | `toggle_wishlist`  | Toggle wishlist membership for `product_id`.                                         |
-| `purchase`         | **`POST /api/orders`** with current cart; clears cart and shows order id (needs DB). |
+| `purchase`         | **`POST /api/orders`** then Razorpay or skip; clears cart after success (needs DB + optional Razorpay keys). |
 | `get_cart`         | Current lines and total.                                                             |
 | `get_products`     | List catalog; optional `category` filter (enum of current categories).               |
 | `list_products`    | Compact listing (same catalog snapshot).                                             |

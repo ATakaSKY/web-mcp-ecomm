@@ -6,6 +6,7 @@ import { formatInr } from "../lib/formatPrice";
 import type { UserOrder } from "../types";
 import { ROUTES } from "../lib/routes";
 import btn from "./buttons.module.css";
+import { ProductImage } from "./ProductImage";
 import styles from "./OrdersView.module.css";
 import views from "./views.module.css";
 
@@ -181,9 +182,9 @@ export function OrdersView() {
             <ul className={styles.lineList}>
               {order.lines.map((line, idx) => (
                 <li key={`${order.id}-${line.product.id}-${idx}`} className={styles.lineRow}>
-                  <img
+                  <ProductImage
                     src={line.product.image}
-                    alt=""
+                    alt={line.product.name}
                     className={styles.lineImg}
                   />
                   <div className={styles.lineInfo}>

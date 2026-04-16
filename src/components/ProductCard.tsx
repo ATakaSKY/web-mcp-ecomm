@@ -2,6 +2,7 @@ import type { Product } from "../types";
 import { formatInr } from "../lib/formatPrice";
 import { useStore } from "../store/StoreContext";
 import btn from "./buttons.module.css";
+import { ProductImage } from "./ProductImage";
 import styles from "./ProductCard.module.css";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -12,7 +13,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className={styles.productCard}>
-      <img src={product.image} alt={product.name} className={styles.productImg} />
+      <ProductImage src={product.image} alt={product.name} className={styles.productImg} />
       <div className={styles.productBody}>
         <span className={styles.productCategory}>{product.category}</span>
         <h3 className={styles.productName}>{product.name}</h3>

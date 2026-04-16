@@ -4,6 +4,10 @@ import { products as fallbackCatalog } from "../src/data/products.js";
 import { getDb } from "../db/client.js";
 import { products as productsTable } from "../db/schema.js";
 
+/** Edge/browser hint: catalog changes occasionally; CDN can cache briefly then revalidate. */
+const PRODUCTS_CACHE_CONTROL =
+  "public, s-maxage=60, stale-while-revalidate=300";
+
 function toClientProduct(row: {
   id: string;
   name: string;
@@ -30,6 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const db = getDb();
   if (!db) {
+    res.setHeader("Cache-Control", PRODUCTS_CACHE_CONTROL);
     res.status(200).json(fallbackCatalog);
     return;
   }
@@ -47,18 +52,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(404).json({ error: "Product not found" });
         return;
       }
+      res.setHeader("Cache-Control", PRODUCTS_CACHE_CONTROL);
       res.status(200).json(toClientProduct(row));
       return;
     }
 
     const rows = await db.select().from(productsTable);
     if (rows.length === 0) {
+      res.setHeader("Cache-Control", PRODUCTS_CACHE_CONTROL);
       res.status(200).json(fallbackCatalog);
       return;
     }
+    res.setHeader("Cache-Control", PRODUCTS_CACHE_CONTROL);
     res.status(200).json(rows.map(toClientProduct));
   } catch (e) {
     console.error("[api/products]", e);
+    res.setHeader("Cache-Control", PRODUCTS_CACHE_CONTROL);
     res.status(200).json(fallbackCatalog);
   }
 }

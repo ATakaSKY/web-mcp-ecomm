@@ -1,6 +1,6 @@
 # Delivery phases
 
-This repo is grown in **phases**: each phase adds a slice of “real app” behavior while keeping WebMCP demo value. Completed work is summarized below; later phases are the planned direction (not all implemented yet).
+This repo is grown in **phases**: each phase adds a slice of “real app” behavior while keeping WebMCP demo value. Phases **1–6** are implemented; extend beyond that by appending new sections below.
 
 ---
 
@@ -85,9 +85,18 @@ Inventory, rate limits, and observability remain for later phases.
 
 ---
 
-## Phase 6 — Scale & ops (planned)
+## Phase 6 — Scale & ops (done)
 
-**Goal:** Image/CDN strategy, caching headers, admin/CMS for catalog, CI checks on API contracts.
+**Goal:** Image/CDN-friendly catalog URLs, HTTP caching, minimal catalog admin, CI checks on API contracts.
+
+**What shipped**
+
+- **Caching:** [`vercel.json`](../vercel.json) sets long-lived cache for hashed **`/assets/*`**, short CDN cache for **`/api/products`**, and **`must-revalidate`** for **`/`**. [`api/products.ts`](../api/products.ts) emits the same **`Cache-Control`** on JSON responses.
+- **Images:** shared [`ProductImage`](../src/components/ProductImage.tsx) (`lazy`, `async` decode, `referrerPolicy`). Guidance in [docs/scale-ops.md](./scale-ops.md).
+- **Catalog admin:** **`PUT /api/admin/product`** with **`ADMIN_API_SECRET`** + header **`x-admin-secret`** — upsert one product (no separate CMS UI). Details in [docs/scale-ops.md](./scale-ops.md).
+- **CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs **`npm run check:contracts`**, **`lint`**, **`build`**. Contract script: [`scripts/check-api-contracts.ts`](../scripts/check-api-contracts.ts).
+
+**Not in scope:** Full admin UI, image resizing pipeline, or rate limiting (add as needed for production traffic).
 
 ---
 

@@ -10,6 +10,7 @@ import forms from "./forms.module.css";
 import pc from "./ProductCard.module.css";
 import views from "./views.module.css";
 import styles from "./QuickBuyModal.module.css";
+import { ProductImage } from "./ProductImage";
 
 const SHIPPING_STANDARD_INR = 499;
 const SHIPPING_EXPRESS_INR = 1299;
@@ -125,7 +126,7 @@ export function QuickBuyModal() {
 
         {/* Product preview */}
         <div className={styles.modalProductPreview}>
-          <img src={product.image} alt={product.name} />
+          <ProductImage src={product.image} alt={product.name} />
           <div>
             <h3>{product.name}</h3>
             <p className={`${pc.productDesc} ${styles.previewDesc}`}>{product.description}</p>

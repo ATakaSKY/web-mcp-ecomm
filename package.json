@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "npm run typecheck:api && tsc -b && vite build",
     "lint": "eslint .",
+    "check:contracts": "tsx scripts/check-api-contracts.ts",
     "typecheck:api": "tsc --noEmit -p tsconfig.api.json",
     "preview": "vite preview",
     "vercel:dev": "npx vercel dev",
